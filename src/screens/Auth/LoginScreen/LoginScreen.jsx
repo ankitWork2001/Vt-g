@@ -85,7 +85,7 @@ const LoginScreen = () => {
             <View style={styles.body}>
                 <Text style={styles.welcomeText}>WelCome Back!</Text>
 
-                <Text style={styles.label}>E-Mail Address / Phone Number</Text>
+                <Text style={styles.label}>E-Mail Address</Text>
                 <TextInput style={styles.input}
                     value={email}
                     onChangeText={(text) => textFill(text, 'email')}

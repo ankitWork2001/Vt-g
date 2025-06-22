@@ -55,7 +55,7 @@ export const loadToken = createAsyncThunk(
         try {
             const token = await AsyncStorage.getItem('userToken');
             // console.log('Loaded token from storage:', token);
-           
+
             return token;
         } catch (err) {
             return rejectWithValue('No token found');

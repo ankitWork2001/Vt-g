@@ -26,15 +26,15 @@ const WalletInfoScreen = () => {
     const dispatch = useDispatch();
 
     const walletFetched = useRef(false);
-
+    console.log('Wallet Balance:', wallet, 'Loading:', loading);
     useEffect(() => {
         // dispatch(getWalletBalance());
         if (!walletFetched.current) {
             dispatch(getWalletBalance());
             walletFetched.current = true;
         }
-        // console.log('Wallet Balance:', wallet, 'Loading:', loading);
-    }, []);
+       
+    }, [dispatch]);
     return (
         <>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />

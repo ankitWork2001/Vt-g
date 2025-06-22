@@ -1,20 +1,24 @@
-import React, { useReducer, useRef, useState } from 'react';
-import { Modal, Dimensions, Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View, Easing, Animated } from 'react-native';
+import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { Modal, Dimensions, Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View, Easing, Animated, Alert, TextInput, ActivityIndicator } from 'react-native';
 import SpinPageBackSide from '../../components/Header/SpinPageBackSide';
 import { RFValue } from 'react-native-responsive-fontsize';
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 import Svg, { Circle, G, Path, Text as SvgText, Defs, Stop, LinearGradient } from "react-native-svg";
+import { useDispatch, useSelector } from 'react-redux';
+import { getSpinCount, getSpinLogs, getSpinPrizeList, playSpin, purchaseSpin, errorMsg } from '../../redux/slices/spinSlice';
+import { useFocusEffect } from '@react-navigation/native';
+import Loader from '../../components/Loader/Loader';
 
 
 // const prizes = [
 //   "50$", "1$", "5$", "20$", "JACKPOT", "15$",
 //   "100$", "1$", "500$", "10$", "ZERO", "2$",
 // ];
-const prizes = [
-  "IPHONE", "$333", "IPAD", "WATCH", "$0.11", "$0.66",
-  "$0.33", "$111", "$11", "$66", "$0", "$333",
-];
+// const prizes = [
+//   "IPHONE", "$333", "IPAD", "WATCH", "$0.11", "$0.66",
+//   "$0.33", "$111", "$11", "$66", "$0", "$333",
+// ];
 
 const { width } = Dimensions.get("window");
 const colors = ["#ffbf80", "#661a00"];
@@ -38,22 +42,63 @@ const SpinScreen = () => {
   const [isSpinning, setIsSpinning] = useState(false);
   const { height, width } = Dimensions.get('window');
   const [showModal, setShowModal] = useState(false);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [purchaseAmount, setPurchaseAmount] = useState('1');
   const animatedValue = useRef(new Animated.Value(0)).current;
   const wheelRotation = useRef(0);
+  const dispatch = useDispatch();
+  const { spinHistory, loading, errorMsg, spinResult, prizeList, spinCount, prizeListLoading, spinCountLoading, purchaseLoading } = useSelector((state) => state.spin)
+  const prizes = prizeList?.prizes;
+  // console.log('spinHistory', spinHistory);
+  console.log('Spin Count Loading', spinCountLoading);
+  // console.log('Spin Prize', prizeList);
 
-  const spinWheel = () => {
-    if (isSpinning) return;
-    setIsSpinning(true);
+  useEffect(() => {
+    dispatch(getSpinCount());
+    // console.log('Spin Count', spinCount);
+  }, [dispatch])
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     dispatch(getSpinCount());
+  //   }, [dispatch])
+  // );
+
+  const spinWheel = async () => {
+    if (isSpinning || spinCount <= 0) return;
+
     setWinner("");
     setShowModal(false);
-    const randomIndex = Math.floor(Math.random() * numberOfSegments);
+    // const randomIndex = Math.floor(Math.random() * numberOfSegments);
 
+    //  1: Dispatch playSpin thunk to get result from backend
+    let result;
+    try {
+      result = await dispatch(playSpin()).unwrap();
+      if (result.success) {
+        setIsSpinning(true);
+        dispatch(getSpinCount())
+      }
+
+    } catch (error) {
+      Alert.alert("Play spin failed:", e);
+      setIsSpinning(false);
+      return;
+    }
+    // console.log('Spin Result', result.spin.resultValue);
+    if (!result.spin || result.spin.resultValue === undefined) return;
+
+    // 2: Find the index of spinValue in `prizes`
+
+    const spinValue = result.spin.resultValue;
+    // console.log('Spin value', spinValue);
+
+    const randomIndex = Number(spinValue);
     // Subtract 90 deg to align the winner at the top (12 o'clock)
     const rotateTo = 360 * 6 + (360 - (randomIndex * angleBySegment + angleBySegment / 2) - 90);
 
     Animated.timing(animatedValue, {
       toValue: rotateTo,
-      duration: 4000,
+      duration: 3000,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start(() => {
@@ -61,90 +106,132 @@ const SpinScreen = () => {
       setIsSpinning(false);
       setWinner(prizes[randomIndex]);
       animatedValue.setValue(wheelRotation.current);
-      setTimeout(() => setShowModal(true), 500);
+      setTimeout(() =>
+        setShowModal(true), 500);
+      (async () => {
+        try {
+          await dispatch(getSpinCount());
+        } catch (e) {
+          console.error("Failed to refresh spin count:", e);
+        }
+      })();
+
     });
   };
-
   const interpolatedRotate = animatedValue.interpolate({
     inputRange: [0, 360],
     outputRange: ["0deg", "360deg"],
   });
+  const handlePurchase = () => {
+    setShowModal(!showModal)
+    setShowPurchaseModal(!showPurchaseModal)
+  }
+  const buySpinPurchaseHandle = async () => {
+    setShowModal(false)
+    setShowPurchaseModal(true)
+    if (!purchaseAmount.trim()) {
+      Alert.alert('Error', 'Please enter an amount');
+      return;
+    }
+    try {
+      const result = await dispatch(purchaseSpin(purchaseAmount)).unwrap();
+      Alert.alert("Success", result?.message || 'Spin purchased successfully');
+      dispatch(getSpinCount());
+      setShowPurchaseModal(false);
+      // dispatch(getSpinLogs());
+
+    } catch (error) {
+      Alert.alert("Error", error || 'Spin purchase failed');
+
+    }
+  };
+
   // const wheelSize = width * 0.92;
+
   return (
-    <ImageBackground
-      source={require('../../assests/spinPageBGImage.png')}
-      style={styles.BGImage}
-      resizeMode="cover"
-    >
-      <SafeAreaView style={styles.container}>
+    <>
+      {
+        prizeListLoading ? (
+          <Loader visible={prizeListLoading} />
+        ) :
+          (
 
-        <SpinPageBackSide />
-        <View style={styles.spinContainer}>
-          <Svg width={wheelSize + 18} height={wheelSize + 18} style={{ position: "absolute" }}>
-            <Circle
-              cx={(wheelSize + 18) / 2}
-              cy={(wheelSize + 18) / 2}
-              r={wheelSize / 2 + 6}
-              fill="none"
-              stroke="#FFD700"
-              strokeWidth={5}
-            />
-          </Svg>
-          {/* <Path d={path} fill={colors[i % colors.length]} /> */}
-          
 
-              <Animated.View style={{ transform: [{ rotate: interpolatedRotate }] }}>
-                <Svg width={wheelSize} height={wheelSize}>
-                  <Defs>
-                    {prizes.map((_, i) => (
-                      <LinearGradient
-                        key={`grad-${i}`}
-                        id={`grad-${i}`}
-                        x1="0%"
-                        y1="0%"
-                        x2="0%"
-                        y2="100%"
-                      >
-                        <Stop offset="0%" stopColor={i % 2 === 0 ? '#FFE8AC' : '#FFC14D'} />
-                        <Stop offset="100%" stopColor={i % 2 === 0 ? '#FF8C4A' : '#9C1000'} />
-                      </LinearGradient>
-                    ))}
-                  </Defs>
-                  <G>
-                    {prizes.map((prize, i) => {
-                      const start = i * angleBySegment;
-                      const end = (i + 1) * angleBySegment;
-                      const path = calculateArc(start, end);
-                      const r = (wheelSize / 2) * 0.75;
-                      const mid = start + angleBySegment / 2;
-                      const x = wheelSize / 2 + r * Math.cos((Math.PI / 180) * mid);
-                      const y = wheelSize / 2 + r * Math.sin((Math.PI / 180) * mid);
-                      return (
-                        <G key={i}>
+            <ImageBackground
+              source={require('../../assests/spinPageBGImage.png')}
+              style={styles.BGImage}
+              resizeMode="cover"
+            >
 
-                          <Path d={path} fill={`url(#grad-${i})`} />
+              <SafeAreaView style={styles.container}>
 
-                          <SvgText
-                            x={x}
-                            y={y}
-                            fill="#fff"
-                            fontSize="14"
-                            fontWeight="bold"
-                            textAnchor="middle"
-                            alignmentBaseline="middle"
-                            transform={`rotate(${mid}, ${x}, ${y})`}
+                <SpinPageBackSide />
+                <View style={styles.spinContainer}>
+                  <Svg width={wheelSize + 18} height={wheelSize + 18} style={{ position: "absolute" }}>
+                    <Circle
+                      cx={(wheelSize + 18) / 2}
+                      cy={(wheelSize + 18) / 2}
+                      r={wheelSize / 2 + 6}
+                      fill="none"
+                      stroke="#FFD700"
+                      strokeWidth={5}
+                    />
+                  </Svg>
+                  {/* <Path d={path} fill={colors[i % colors.length]} /> */}
+
+
+                  <Animated.View style={{ transform: [{ rotate: interpolatedRotate }] }}>
+                    <Svg width={wheelSize} height={wheelSize}>
+                      <Defs>
+                        {prizes.map((_, i) => (
+                          <LinearGradient
+                            key={`grad-${i}`}
+                            id={`grad-${i}`}
+                            x1="0%"
+                            y1="0%"
+                            x2="0%"
+                            y2="100%"
                           >
-                            {prize}
-                          </SvgText>
-                        </G>
+                            <Stop offset="0%" stopColor={i % 2 === 0 ? '#FFE8AC' : '#FFC14D'} />
+                            <Stop offset="100%" stopColor={i % 2 === 0 ? '#FF8C4A' : '#9C1000'} />
+                          </LinearGradient>
+                        ))}
+                      </Defs>
+                      <G>
+                        {prizes.map((prize, i) => {
+                          const start = i * angleBySegment;
+                          const end = (i + 1) * angleBySegment;
+                          const path = calculateArc(start, end);
+                          const r = (wheelSize / 2) * 0.75;
+                          const mid = start + angleBySegment / 2;
+                          const x = wheelSize / 2 + r * Math.cos((Math.PI / 180) * mid);
+                          const y = wheelSize / 2 + r * Math.sin((Math.PI / 180) * mid);
+                          return (
+                            <G key={i}>
 
-                      );
-                    })}
-                  </G>
-                </Svg>
+                              <Path d={path} fill={`url(#grad-${i})`} />
 
-              </Animated.View>
-              {/* <Animated.Image
+                              <SvgText
+                                x={x}
+                                y={y}
+                                fill="#fff"
+                                fontSize="14"
+                                fontWeight="bold"
+                                textAnchor="middle"
+                                alignmentBaseline="middle"
+                                transform={`rotate(${mid}, ${x}, ${y})`}
+                              >
+                                {prize}
+                              </SvgText>
+                            </G>
+
+                          );
+                        })}
+                      </G>
+                    </Svg>
+
+                  </Animated.View>
+                  {/* <Animated.Image
             source={require('../../assests/spinWheelImage3.png')} // wheel image
             style={{
               width: wheelSize,
@@ -155,72 +242,168 @@ const SpinScreen = () => {
             resizeMode="contain"
 
           /> */}
-              <View style={styles.knobContainer}>
-                <View style={styles.knobInside}>
-                  <Image
-                    source={require("../../assests/knob2.png")}
-                    style={styles.knobPointer}
-                  />
+                  <View style={styles.knobContainer}>
+                    <View style={styles.knobInside}>
+                      <Image
+                        source={require("../../assests/knob2.png")}
+                        style={styles.knobPointer}
+                      />
+                    </View>
+
+                  </View>
                 </View>
-             
-          </View>
-        </View>
-        <View style={styles.btnContainer}>
-          <Icon name='keyboard-double-arrow-down' size={50} color="#FFFFFFA1" style={{ marginBottom: 10 }} />
-          <TouchableOpacity
+                <View style={styles.btnContainer}>
+                  <Icon name='keyboard-double-arrow-down' size={50} color="#FFFFFFA1" style={{ marginBottom: 10 }} />
+
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={[styles.button, isSpinning && { backgroundColor: "#999" }]}
+                    onPress={() => !spinCount || spinCount <= 0 ? setShowPurchaseModal(!showPurchaseModal) : spinWheel()}
+                    disabled={isSpinning}
+                  >
+                    {
+                      isSpinning ? (<Text style={styles.buttonText}>
+                        Spinning...
+                      </Text>) : (
+                        <>
+                          {
+                            spinCountLoading ? (
+                              // <ActivityIndicator size={'small'} color={'#fff'} />
+                              <Text style={styles.buttonText}>Please wait...</Text>
+                            ) : (
+                              <Text style={styles.buttonText}>
+                                {`Spin Now (${spinCount} left)`}
+                              </Text>
+                            )
+                          }
+                        </>
+
+                      )
+                    }
+
+                  </TouchableOpacity>
+
+
+                  {/* <TouchableOpacity
             activeOpacity={0.8}
             style={[styles.button, isSpinning && { backgroundColor: "#999" }]}
-            onPress={spinWheel}
+            onPress={handlePlay}
             disabled={isSpinning}
           >
             <Text style={styles.buttonText}>
-              {isSpinning ? "Spinning..." : "Spin Now"}
+              Play
             </Text>
-          </TouchableOpacity>
-        </View>
+          </TouchableOpacity> */}
+                </View>
 
 
-        <Modal
-          animationType='fade'
-          transparent={true}
-          visible={showModal}
-          onRequestClose={() => setShowModal(false)}
-          hardwareAccelerated={true}
-          statusBarTranslucent={true}
-          navigationBarTranslucent={true}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Image
-                source={require('../../assests/spinPageGiftImage.png')}
-                style={{ width: 100, height: 100, bottom: 60 }}
-                resizeMode='contain'
-              />
-              <Text style={{ fontSize: RFValue(30), fontWeight: 'bold', color: '#FF8800', bottom: 40 }}>Lucky Spin Star!</Text>
-              <Text style={{ fontSize: RFValue(20), fontWeight: '400', marginBottom: 10 }}>You Won</Text>
-              <Text style={{ fontSize: RFValue(20), marginBottom: 10 }}>{winner}</Text>
-              <Icon name='keyboard-double-arrow-down' size={24} color="orange" style={{ marginBottom: 10 }} />
+                <Modal
+                  animationType='fade'
+                  transparent={true}
+                  visible={showModal}
+                  onRequestClose={() => setShowModal(false)}
+                  hardwareAccelerated={true}
+                  statusBarTranslucent={true}
+                  navigationBarTranslucent={true}
+                >
+                  <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                      <Image
+                        source={require('../../assests/spinPageGiftImage.png')}
+                        style={{ width: 100, height: 100, bottom: 60 }}
+                        resizeMode='contain'
+                      />
+                      <Text style={{ fontSize: RFValue(30), fontWeight: 'bold', color: '#FF8800', bottom: 40 }}>Lucky Spin Star!</Text>
+                      <Text style={{ fontSize: RFValue(20), fontWeight: '400', marginBottom: 10 }}>You Won</Text>
+                      <Text style={{ fontSize: RFValue(20), marginBottom: 10 }}>{winner}</Text>
+                      <Icon name='keyboard-double-arrow-down' size={24} color="orange" style={{ marginBottom: 10 }} />
 
-              <View style={{ flex: 1 }} />
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={[styles.spinModalButton, { top: height * 0.29 }]} onPress={() => {
-                  setShowModal(false);
-                  setWinner("");
-                  spinWheel();
+                      <View style={{ flex: 1 }} />
+                      {
+                        !spinCount || spinCount <= 0 ? (
+                          <TouchableOpacity
+                            activeOpacity={0.8}
+                            style={[styles.spinModalButton, { top: height * 0.29, backgroundColor: '#fff' }]}
+                            onPress={handlePurchase}
+                          >
+                            <Text style={[styles.buttonText, { color: '#000' }]}>
+                              {`${spinCount} Spins Left — Buy More`}
+                            </Text>
+                          </TouchableOpacity>
 
-                }
-                }>
-                <Text style={styles.signInButtonText}>Spin Again</Text>
-              </TouchableOpacity>
-              {/* <TouchableOpacity onPress={() => setModalVisible(false)} style={{ marginTop: 16 }}>
-                <Text style={{ color: "#555", fontSize: 16 }}>Close</Text>
-              </TouchableOpacity> */}
-            </View>
-          </View>
-        </Modal>
-      </SafeAreaView>
-    </ImageBackground >
+                        ) : (
+                          <TouchableOpacity
+                            activeOpacity={0.8}
+                            style={[styles.spinModalButton, { top: height * 0.29 }]} onPress={() => {
+                              setShowModal(false);
+                              setWinner("");
+                              spinWheel();
+
+                            }
+                            }>
+                            <Text style={styles.signInButtonText}>Spin Again</Text>
+                          </TouchableOpacity>
+                        )
+
+                      }
+                    </View>
+                  </View>
+                </Modal>
+                {/* purchase modal */}
+                <Modal
+                  animationType='fade'
+                  transparent={true}
+                  visible={showPurchaseModal}
+                  onRequestClose={() => setShowPurchaseModal(false)}
+                  hardwareAccelerated={true}
+                  statusBarTranslucent={true}
+                  navigationBarTranslucent={true}
+                >
+                  <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                      <Text style={{ fontSize: 20, fontWeight: 'bold', marginTop: 10 }}>
+                        Buy 1 spin for $1
+                      </Text>
+
+                      <TextInput
+                        placeholder="Enter amount"
+                        keyboardType="numeric"
+                        value={purchaseAmount}
+                        onChangeText={setPurchaseAmount}
+                        placeholderTextColor={'#000'}
+                        style={styles.buyInput}
+                      />
+                      <View style={{ flexDirection: 'row', gap: 20 }}>
+
+                        <TouchableOpacity
+                          activeOpacity={0.8}
+                          style={[styles.buyButton, !purchaseAmount && { opacity: 0.5 }]}
+                          disabled={!purchaseAmount}
+                          onPress={buySpinPurchaseHandle}
+                        >
+                          {
+                            purchaseLoading ? (
+                              <ActivityIndicator size={'small'} color={'#fff'} />
+                            ) : (<Text style={{ color: '#fff', fontSize: 16 }}>Buy now</Text>)
+                          }
+
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          activeOpacity={0.8}
+                          style={styles.buyButton}
+                          onPress={() => setShowPurchaseModal(!showPurchaseModal)}
+                        >
+                          <Text style={{ color: '#fff', fontSize: 16 }}>Cancel</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </Modal>
+              </SafeAreaView>
+            </ImageBackground >
+          )
+      }
+    </>
   );
 };
 
@@ -255,7 +438,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 5,
     marginTop: 30,
-    zIndex: 10,         // Add this
+    zIndex: 10,
     elevation: 10
   },
   signInButtonText: {
@@ -275,7 +458,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -340,7 +523,7 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: "#34A853",
-    paddingHorizontal: 120,
+    // paddingHorizontal: 120,
     paddingVertical: 14,
     borderRadius: 5,
     elevation: 3,
@@ -355,5 +538,25 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: RFValue(12),
+    textAlign: 'center',
+
   },
+  buyInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    width: '100%',
+    marginBottom: 20,
+    color: '#000'
+  },
+  buyButton: {
+    backgroundColor: '#FF8800',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+    width: '40%'
+  }
 });

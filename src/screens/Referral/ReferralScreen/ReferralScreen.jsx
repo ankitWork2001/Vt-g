@@ -8,40 +8,43 @@ import ReferralPageUpparPart from './ReferralPageUpparPart';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchReferralCode, fetchReferralCommission, fetchReferralTree } from '../../../redux/slices/referralSlice';
 import Loader from '../../../components/Loader/Loader';
-
+import { getMyReferralSummary, getReferralBonusHistory } from '../../../redux/slices/rewardSlice';
+import moment from 'moment';
 
 const ReferralScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { height } = Dimensions.get('window');
-  const { referralTree, successMsg, errorMsg, referralCode, loading, commission } = useSelector(state => state.referral);
+  const { referralTree, successMsg, errorMsg, referralCode, loading: referralLoading, commission } = useSelector(state => state.referral);
+  const { summary, loading: summaryLoading, bonusHistory } = useSelector((state) => state.reward)
   const dispatch = useDispatch();
-  console.log('Commission:', commission);
-  console.log('Referral Tree:', referralTree);
-
-
+  const isLoading = summaryLoading || referralLoading;
+  // console.log('Commission:', commission);
+  // console.log('Referral Tree:', referralTree);
+  // console.log('Bonus History:', bonusHistory);
   useEffect(() => {
     dispatch(fetchReferralCode());
     dispatch(fetchReferralTree());
     dispatch(fetchReferralCommission());
+    dispatch(getMyReferralSummary())
+    dispatch(getReferralBonusHistory())
   }, []);
-  const renderItem = ({ item }) => (
-    (
+  // console.log('History', bonusHistory);
+  const renderCommissionItem = ({ item }) => {
+    const commissionPercent = item ? item.commissionPercent : 'N/A'
+    return (
       <View style={styles.dataRow}>
-        <Text style={styles.cellText}>Level: {item.level}</Text>
-        {/* <Text>Name: {item.referredId?.name || 'N/A'}</Text>
-        <Text>Email: {item.referredId?.email}</Text>
-        <Text>Username: {item.referredId?.username}</Text> */}
-        {/* <Text>Role: {item.referredId?.role}</Text> */}
-        <Text style={styles.cellText}>Commission: {item.commission}%</Text>
+        <Text style={styles.cellText}>Level: 1 {item.level}</Text>
+        <Text style={styles.cellText}>{commissionPercent}%</Text>
       </View>
     )
-  );
+
+  }
   return (
     <SafeAreaView style={styles.MainContainer}>
       {
-        loading ? (
-          <Loader visible={loading} />
+        isLoading ? (
+          <Loader visible={isLoading} />
         ) : (
           <>
             <ScrollView
@@ -54,29 +57,23 @@ const ReferralScreen = () => {
 
               <View style={styles.Tablecontainer}>
                 <View style={styles.headerRowcontainer}>
-                  <Text style={[styles.TableheaderText,{marginLeft: 20}]}>Level</Text>
+                  <Text style={[styles.TableheaderText, { marginLeft: 20 }]}>Level</Text>
                   <Text style={styles.TableheaderText}>Commission</Text>
                 </View>
-                {/* <View style={styles.dataRow}>
-                  <Text style={styles.cellText}>Level 1</Text>
-                  <Text style={styles.cellText}>10%</Text>
-                </View>
-                <View style={styles.dataRow}>
-                  <Text style={styles.cellText}>Level 2</Text>
-                  <Text style={styles.cellText}>5%</Text>
-                </View>
-                <View style={styles.dataRow}>
-                  <Text style={styles.cellText}>Level 3</Text>
-                  <Text style={styles.cellText}>2%</Text>
-                </View> */}
+
                 <FlatList
                   data={referralTree}
                   scrollEnabled={false}
                   // horizontal
                   keyExtractor={(_, index) => index.toString()}
                   contentContainerStyle={{ padding: 10 }}
-                  ListEmptyComponent={<Text>No referrals yet.</Text>}
-                  renderItem={renderItem}
+                  ListEmptyComponent={<Text style={{
+                    textAlign: 'center',
+                    fontSize: RFValue(16),
+                    fontWeight: '400',
+                    marginTop: 10
+                  }}>No referrals yet.</Text>}
+                  renderItem={renderCommissionItem}
                 />
                 <View style={styles.showDetailsButtonContainer}>
                   <TouchableOpacity
@@ -87,20 +84,20 @@ const ReferralScreen = () => {
                   </TouchableOpacity>
                 </View>
               </View>
-
+              {/* Summary */}
               <Text style={[styles.headerText, { marginTop: 40 }]}>Your Team</Text>
               <View style={styles.yourTeamContianer}>
                 <View style={[styles.teamBox, { backgroundColor: '#FDBE00' }]}>
                   <Text style={styles.teamBoxText}>Total Refferrals</Text>
-                  <Text style={styles.teamBoxNumber}>25</Text>
+                  <Text style={styles.teamBoxNumber}>{summary ? summary.totalReferrals : '0'}</Text>
                 </View>
                 <View style={[styles.teamBox, { backgroundColor: '#10B981' }]}>
                   <Text style={styles.teamBoxText}>Earnings</Text>
-                  <Text style={styles.teamBoxNumber}>$700</Text>
+                  <Text style={styles.teamBoxNumber}>${summary ? summary.earnings : '0'}</Text>
                 </View>
                 <View style={[styles.teamBox, { backgroundColor: '#FF8632' }]}>
                   <Text style={styles.teamBoxText}>Active Investors</Text>
-                  <Text style={styles.teamBoxNumber}>15</Text>
+                  <Text style={styles.teamBoxNumber}>{summary ? summary.activeInvestors : '0'}</Text>
                 </View>
               </View>
 
@@ -112,21 +109,29 @@ const ReferralScreen = () => {
                   <Text style={styles.TableheaderText}>Amount</Text>
                   <Text style={styles.TableheaderText}>Level</Text>
                 </View>
-                <View style={[styles.dataRow, { backgroundColor: '#84D299' }]}>
-                  <Text style={[styles.cellText, { color: '#fff' }]}>20 April, 2025</Text>
-                  <Text style={[styles.cellText, { color: '#fff' }]}>$100</Text>
-                  <Text style={[styles.cellText, { color: '#fff' }]}>1</Text>
-                </View>
-                <View style={[styles.dataRow, { backgroundColor: '#84D299' }]}>
-                  <Text style={[styles.cellText, { color: '#fff' }]}>10 April, 2025</Text>
-                  <Text style={[styles.cellText, { color: '#fff' }]}>$50</Text>
-                  <Text style={[styles.cellText, { color: '#fff' }]}>2</Text>
-                </View>
-                <View style={[styles.dataRow, { backgroundColor: '#84D299' }]}>
-                  <Text style={[styles.cellText, { color: '#fff' }]}>10 April, 2025</Text>
-                  <Text style={[styles.cellText, { color: '#fff' }]}>$20</Text>
-                  <Text style={[styles.cellText, { color: '#fff' }]}>3</Text>
-                </View>
+
+                {
+                  bonusHistory && !bonusHistory.length <= 0 ? bonusHistory.slice(0, 3).map((item, index) => (
+                    <View
+                      key={index}
+                      style={[styles.dataRow, { backgroundColor: '#84D299' }]}>
+                      <Text style={[styles.cellText, { color: '#fff' }]}>{item ? moment(item.date).format('D MMM YYYY') : "N/A"}</Text>
+                      <Text style={[styles.cellText, { color: '#fff' }]}>{item ? item.amount.toLocaleString('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                      }) : 'N/A'}</Text>
+                      <Text style={[styles.cellText, { color: '#fff' }]}>1</Text>
+                    </View>
+                  ))
+                    : (
+                      <Text style={{
+                        textAlign: 'center',
+                        fontSize: RFValue(16),
+                        fontWeight: '400',
+                        marginVertical: 10
+                      }}>No referrals yet.</Text>
+                    )
+                }
               </View>
             </ScrollView>
           </>
@@ -171,7 +176,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     // textAlign: 'center',
     fontSize: RFValue(12),
- 
+
 
   },
   dataRow: {
@@ -179,7 +184,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 10,
     gap: 10,
-    
+
   },
   cellText: {
     flex: 1,
@@ -220,6 +225,6 @@ const styles = StyleSheet.create({
   },
   teamBoxNumber: {
     color: '#fff',
-    fontSize: RFValue(20),
+    fontSize: RFValue(14),
   },
 })

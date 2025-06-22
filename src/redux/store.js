@@ -7,6 +7,9 @@ import walletReducer from './slices/walletSlice';
 import referralReducer from './slices/referralSlice';
 import adminReducer from './slices/adminSlice';
 import notificationReducer from './slices/notificationSlice';
+import spinReducer from './slices/spinSlice';
+import rewardReducer from "./slices/rewardSlice";
+
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -15,6 +18,8 @@ export const store = configureStore({
     wallet: walletReducer,
     referral: referralReducer,
     admin: adminReducer,
-    notification: notificationReducer
+    notification: notificationReducer,
+    spin: spinReducer,
+    reward: rewardReducer,
   },
 });

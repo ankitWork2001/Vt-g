@@ -15,7 +15,7 @@ const InvestScreen = () => {
   const insets = useSafeAreaInsets(); 
   const { plans, activeInvestments, investmentHistory, loading, error, investPlanLoading } = useSelector(state => state.investment);
   // console.log('Investment Plans:', plans);
-  // console.log('Active Investments:', activeInvestments); 
+  console.log('Active Investments:', activeInvestments); 
   // console.log('Investment History:', investmentHistory);
   const navigation = useNavigation();
   const [loadingPlanId, setLoadingPlanId] = useState(null);

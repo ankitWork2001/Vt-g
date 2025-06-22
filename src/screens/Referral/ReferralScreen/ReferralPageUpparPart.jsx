@@ -10,7 +10,6 @@ const ReferralPageUpparPart = () => {
     const { height } = Dimensions.get('window');
     // console.log(height * 0.03);
     const { referralCode, } = useSelector(state => state.referral);
-    console.log(referralCode);
     const copyToClipboardReferralCode = (itemCopy) => {
         Clipboard.setString(itemCopy);
         Alert.alert('Alert', 'Referral code copied to clipboard');
@@ -28,12 +27,10 @@ const ReferralPageUpparPart = () => {
                         resizeMode='stretch'
                     >
                         <Text style={styles.ReferHeaderText}>Refer Your Friends {'\n'}And Earn</Text>
-
                         <Image
                             source={require('../../../assests/refferalPageBoyGirlImage.png')}
                             style={[styles.refferralImage, { bottom: height * 0.05 }]}
                         />
-
                         <View style={[styles.wrapper, { bottom: height * 0.06 }]}>
                             <View style={styles.couponContainer}>
                                 <View style={styles.codeSection}>

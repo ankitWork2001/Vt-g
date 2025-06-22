@@ -10,6 +10,8 @@ import React, { useState } from 'react';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useNavigation } from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import moment from 'moment';
 
 type LevelKey = 'level1' | 'level2' | 'level3';
 
@@ -39,15 +41,23 @@ const data: Record<LevelKey, { name: string; referredBy?: string; date: string; 
 const ReferralDetailsScreen = () => {
   const navigation = useNavigation();
   const [selectedLevel, setSelectedLevel] = useState<LevelKey>('level1');
+  const { bonusHistory } = useSelector((state: any) => state.reward)
 
-  const renderItem = ({ item }: { item: typeof data[LevelKey][number] }) => (
-    <View style={styles.row}>
-      <Text style={styles.cell}>{item.name}</Text>
-      {selectedLevel !== 'level1' && <Text style={styles.cell}>{item.referredBy}</Text>}
-      <Text style={styles.cell}>{item.date}</Text>
-      <Text style={styles.cell}>{item.earnings}</Text>
-    </View>
-  );
+  const renderItem = ({ item }: { item: typeof data[LevelKey][number] }) => {
+    const date = moment(item.date).format('D MMM YYYY');
+    const amount = item.amount.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    });
+    return (
+      <View style={styles.row}>
+        <Text style={styles.cell}>{item ? item.name : 'N/A'}</Text>
+        {selectedLevel !== 'level1' && <Text style={styles.cell}>{item.referredBy}</Text>}
+        <Text style={styles.cell}>{item ? date : 'N/A'}</Text>
+        <Text style={styles.cell}>{item ? amount : 'N/A'}</Text>
+      </View>
+    )
+  }
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -62,39 +72,45 @@ const ReferralDetailsScreen = () => {
           <Icon name='notifications' size={20} color='#fff' />
         </TouchableOpacity>
       </View>
-      
 
-        <View style={[styles.tabsMainContainer, { marginTop: 30 }]}>
-          <View style={styles.tabs}>
-            {levels.map((level) => (
-              <TouchableOpacity
-                key={level.key}
-                style={[styles.tab, selectedLevel === level.key && styles.activeTab]}
-                onPress={() => setSelectedLevel(level.key)}
-              >
-                <Text style={[styles.tabLabel, selectedLevel === level.key && styles.activeLabel]}>
-                  {level.label}
-                </Text>
-                <Text style={[styles.tabSubLabel, selectedLevel === level.key && styles.activeLabel]}>{level.commission} Commission</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
 
-          <View style={styles.tableHeader}>
-            <Text style={styles.headerCell}>Name</Text>
-            {selectedLevel !== 'level1' && <Text style={styles.headerCell}>Referred By</Text>}
-            <Text style={styles.headerCell}>Joined On</Text>
-            <Text style={styles.headerCell}>Earnings</Text>
-          </View>
-
-          <FlatList
-            data={data[selectedLevel]}
-            keyExtractor={(_, index) => index.toString()}
-            renderItem={renderItem}
-            contentContainerStyle={{ paddingBottom: 30 }}
-          />
+      <View style={[styles.tabsMainContainer, { marginTop: 30 }]}>
+        <View style={styles.tabs}>
+          {levels.map((level) => (
+            <TouchableOpacity
+              key={level.key}
+              style={[styles.tab, selectedLevel === level.key && styles.activeTab]}
+              onPress={() => setSelectedLevel(level.key)}
+            >
+              <Text style={[styles.tabLabel, selectedLevel === level.key && styles.activeLabel]}>
+                {level.label}
+              </Text>
+              <Text style={[styles.tabSubLabel, selectedLevel === level.key && styles.activeLabel]}>{level.commission} Commission</Text>
+            </TouchableOpacity>
+          ))}
         </View>
-     
+
+        <View style={styles.tableHeader}>
+          <Text style={styles.headerCell}>Name</Text>
+          {selectedLevel !== 'level1' && <Text style={styles.headerCell}>Referred By</Text>}
+          <Text style={styles.headerCell}>Joined On</Text>
+          <Text style={styles.headerCell}>Earnings</Text>
+        </View>
+
+        <FlatList
+          data={bonusHistory}
+          keyExtractor={(_, index) => index.toString()}
+          renderItem={renderItem}
+          contentContainerStyle={{ paddingBottom: 30 }}
+          ListEmptyComponent={<Text style={{
+            textAlign:'center',
+            fontSize:RFValue(16),
+            fontWeight:'400',
+            marginTop:10
+          }}>No referrals yet.</Text>}
+        />
+      </View>
+
     </SafeAreaView>
   );
 };

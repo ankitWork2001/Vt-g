@@ -24,6 +24,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { getEmployeeById } from '../../redux/slices/userSlice';
 import Loader from '../../components/Loader/Loader';
+import { getSpinPrizeList } from '../../redux/slices/spinSlice';
 
 interface ImageItem {
     id: string;
@@ -52,7 +53,10 @@ const HomeScreen: React.FC = () => {
             dispatch(getEmployeeById(userId));
         }
     }, [userId]);
+    useEffect(() => {
+        dispatch(getSpinPrizeList());
 
+    }, [dispatch])
     return (
         <>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />

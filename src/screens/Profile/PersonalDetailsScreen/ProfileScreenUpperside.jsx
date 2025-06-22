@@ -94,7 +94,7 @@ const ProfileScreenUpperside = () => {
                     style={styles.levelItem}>
                     <Icon name='radar' size={22} color='#DB0004' />
                     {/* <Text style={styles.levelText}>Spin Left {'\n'}Today:2/5</Text> */}
-                    <Text style={styles.levelText}>Spin Left Today:{userDetails.spinCount}/3</Text>
+                    <Text style={styles.levelText}>Spin Left:{userDetails.spinCount}</Text>
                 </TouchableOpacity>
             </View>
             {/* <Loader visible={loading} /> */}

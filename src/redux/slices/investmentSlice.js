@@ -38,7 +38,7 @@ export const fetchActiveInvestments = createAsyncThunk(
     'investment/fetchActive',
     async (_, { rejectWithValue }) => {
         try {
-            const res = await axiosInstance.get('/invest/active');
+            const res = await axiosInstance.get('/invest/my-active');
             // console.log('Active investment fetched',res.data.investments);
             return res.data.investments;
 
@@ -53,7 +53,7 @@ export const fetchInvestmentHistory = createAsyncThunk(
     'investment/fetchHistory',
     async (_, { rejectWithValue }) => {
         try {
-            const res = await axiosInstance.get('/invest/history');
+            const res = await axiosInstance.get('/invest/my-history');
             // console.log('Investment History Response:', res.data.investments);
             return res.data.investments;
 

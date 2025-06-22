@@ -28,49 +28,8 @@ const SignUpScreen = () => {
 
     const navigation = useNavigation();
     const dispatch = useDispatch();
-    const { loading, errorMsg } = useSelector((state) => state.auth); // Redux state
-    // const handleSignUp = async () => {
-    //     if (!name.trim()) {
-    //         setBadName(true);
-    //         Alert.alert('Message', 'Please Enter Name')
-    //         return;
-    //     }
-    //     if (!userName.trim()) {
-    //         setUserName(true);
-    //         Alert.alert('Message', 'Please Enter Username')
-    //         return;
-    //     }
-    //     else if (!email.trim()) {
-    //         setBadEmail(true)
-    //         Alert.alert('Message', 'Please Enter Email')
-    //         return;
-    //     }
-    //     else if (!mobile.trim()) {
-    //         setBadMobile(true)
-    //         Alert.alert('Message', 'Please Enter Mobile')
-    //         return;
-    //     }
-    //     else if (!password.trim()) {
-    //         setBadPassword(true)
-    //         Alert.alert('Message', 'Please Enter Password')
-    //         return;
-    //     }
-    //     try {
-    //         const result = await signup(name, userName, email, mobile, password);
-    //         if (result?.success) {
-    //             console.log('Signup Success:', result);
-    //             Alert.alert('Success', result.message || 'Account created');
-    //             resetForm();
-    //             setTimeout(() => {
-    //                 navigation.replace('LoginScreen');
-    //             }, 2000);
-    //         }
-    //     } catch (error) {
-    //         console.error('Signup Error:', error.message);
-    //         Alert.alert('Signup Failed', error.message);
-    //     }
+    const { loading, errorMsg } = useSelector((state) => state.auth); 
 
-    // }
     const handleSignUp = async () => {
         if (!name.trim()) {
             setBadName(true);
@@ -165,7 +124,7 @@ const SignUpScreen = () => {
                 >
                     <Text style={styles.welcomeText}>Welcome!</Text>
 
-                    <Text style={styles.label}>Name</Text>
+                    <Text style={styles.label}>Full Name</Text>
                     <TextInput style={styles.input}
                         value={name}
                         placeholderTextColor={'#000'}
@@ -178,14 +137,14 @@ const SignUpScreen = () => {
                         onChangeText={(text) => textFill(text, 'userName')}
                     />
 
-                    <Text style={styles.label}>E-Mail</Text>
+                    <Text style={styles.label}>E-Mail ID</Text>
                     <TextInput style={styles.input}
                         value={email}
                         onChangeText={(text) => textFill(text, 'email')}
                         keyboardType="email-address"
                         placeholderTextColor={'#000'} />
 
-                    <Text style={styles.label}>Mobile</Text>
+                    <Text style={styles.label}>Mobile Number</Text>
                     <TextInput style={styles.input}
                         value={mobile}
                         onChangeText={(text) => textFill(text, 'mobile')}

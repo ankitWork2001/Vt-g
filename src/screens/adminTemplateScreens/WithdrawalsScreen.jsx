@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import {
+  FlatList,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -14,13 +15,6 @@ import { useDispatch, useSelector } from 'react-redux'
 import { fetchAllWithdrawals } from '../../redux/slices/adminSlice'
 import Loader from '../../components/Loader/Loader'
 
-// const depositRequests = [
-//   { REQId: 'REQ21', userId: 'UU01', amount: 'Rs.200', RequestTime: '5/09/2025', status: 'Pending' },
-//   { REQId: 'REQ21', userId: 'UU01', amount: 'Rs.300', RequestTime: '5/09/2025', status: 'Pending' },
-//   { REQId: 'REQ21', userId: 'UU01', amount: 'Rs.200', RequestTime: '5/09/2025', status: 'Pending' },
-//   { REQId: 'REQ21', userId: 'UU01', amount: 'Rs.400', RequestTime: '5/09/2025', status: 'Pending' },
-// ]
-
 
 const columnWidths = {
   REQId: 100,
@@ -33,20 +27,41 @@ const columnWidths = {
 
 const WithdrawalsScreen = () => {
   const dispatch = useDispatch();
-  const { withdrawals, loading } = useSelector((state) => state.admin);
+  const { withdrawals, withdrawalsLoading } = useSelector((state) => state.admin);
   console.log('withdrawals', withdrawals);
 
   useEffect(() => {
     dispatch(fetchAllWithdrawals());
   }, [dispatch]);
-
+  const renderWithdrawalItem = (item) => {
+    const itemId = item ? item._id : 'N/A';
+    const userId = item ? item.userId?._id : 'N/A';
+    const amount = item ? item.amount.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }) : 'N/A';
+    const status = item ? item.status?.charAt(0).toUpperCase() + item.status.slice(1) : 'N/A';
+    const requestTime = item ? new Date(item.createdAt).toLocaleDateString('en-GB') : 'N/A';
+    return (
+      <View style={styles.row} >
+        <Text style={[styles.cell, { width: columnWidths.REQId }]}>{itemId}</Text>
+        <Text style={[styles.cell, { width: columnWidths.userId }]}>{userId}</Text>
+        <Text style={[styles.cell, { width: columnWidths.amount }]}>{amount}</Text>
+        <Text style={[styles.cell, { width: columnWidths.RequestTime, color: 'blue', textDecorationLine: 'underline' }]}>{requestTime}</Text>
+        <Text style={[styles.cell, { width: columnWidths.status, color: '#E5A400' }]}>{status}</Text>
+        <View style={[styles.cell, { width: columnWidths.actions, flexDirection: 'row' }]}>
+          <Text style={[styles.link, { color: 'green', textDecorationLine: 'underline' }]}>Approve</Text>
+        </View>
+      </View>
+    )
+  }
   return (
     <>
       <StatusBar backgroundColor={'transparent'} barStyle={"dark-content"} translucent />
       {
-        loading ? (
+        withdrawalsLoading ? (
 
-          <Loader visible={loading} />
+          <Loader visible={withdrawalsLoading} />
         ) : (
           <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
 
@@ -67,18 +82,18 @@ const WithdrawalsScreen = () => {
                       <Text style={[styles.headerCell, { width: columnWidths.status }]}>Status</Text>
                       <Text style={[styles.headerCell, { width: columnWidths.actions }]}>Actions</Text>
                     </View>
-                    {withdrawals.map((item, index) => (
-                      <View style={styles.row} key={index}>
-                        <Text style={[styles.cell, { width: columnWidths.REQId }]}>{item._id}</Text>
-                        <Text style={[styles.cell, { width: columnWidths.userId }]}>{item.userId?._id}</Text>
-                        <Text style={[styles.cell, { width: columnWidths.amount }]}>{item.amount}</Text>
-                        <Text style={[styles.cell, { width: columnWidths.RequestTime, color: 'blue', textDecorationLine: 'underline' }]}>{new Date(item.createdAt).toLocaleDateString('en-GB')}</Text>
-                        <Text style={[styles.cell, { width: columnWidths.status, color: '#E5A400' }]}>{item.status?.charAt(0).toUpperCase() + item.status.slice(1)}</Text>
-                        <View style={[styles.cell, { width: columnWidths.actions, flexDirection: 'row' }]}>
-                          <Text style={[styles.link, { color: 'green', textDecorationLine: 'underline' }]}>Approve</Text>
-                        </View>
-                      </View>
-                    ))}
+                   
+                    <FlatList
+                      data={withdrawals}
+                      keyExtractor={(_, index) => index.toString()}
+                      renderItem={renderWithdrawalItem}
+                      contentContainerStyle={{ paddingBottom: 20 }}
+                      showsVerticalScrollIndicator={false}
+                      ListEmptyComponent={() => (
+                        <Text style={{ textAlign: 'center', marginTop: 20, fontSize: RFValue(15) }}>No withdrawal available</Text>
+                      )}
+                      scrollEnabled={false}
+                    />
                   </View>
                 </ScrollView>
               </View>
@@ -98,7 +113,8 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#F3F3F3",
     margin: 10,
-    borderRadius: 6
+    borderRadius: 6,
+    top: -50
   },
   HorizentalScrollContainer: {
     backgroundColor: '#fff',

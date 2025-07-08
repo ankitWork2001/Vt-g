@@ -23,6 +23,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import jwtDecode from 'jwt-decode';
 import { getEmployeeById } from '../redux/slices/userSlice';
 import ScreenWrapper from '../components/ScreenWrapper';
+import ForgetPasswordScreen from '../screens/Auth/ForgetPassword/ForgetPasswordScreen';
 
 const Stack = createNativeStackNavigator();
 const MainStackNavigator = () => {
@@ -61,6 +62,7 @@ const MainStackNavigator = () => {
             <Stack.Screen name='UserDeposit' component={UserDeposit} />
             <Stack.Screen name='UserWithdraw' component={UserWithdraw} />
             <Stack.Screen name='UserWithdrawalOTP' component={UserWithdrawOTP} />
+            <Stack.Screen name='ForgetPasswordScreen' component={ForgetPasswordScreen} />
 
           </Stack.Navigator>
         </ScreenWrapper>

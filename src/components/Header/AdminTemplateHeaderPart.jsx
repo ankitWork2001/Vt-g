@@ -130,8 +130,8 @@ const AdminTemplateHeaderPart = ({ name, paddingBottom = 40 }) => {
                                     style={styles.menuLogoutButton}
                                     disabled={loading}
                                 >
-                                    {loading ?
-                                        <ActivityIndicator size={23} color="#000" />
+                                    { loading ?
+                                        <ActivityIndicator size={22} color="#000" />
                                         : (<Text style={styles.menuLogoutButtonText}>Log Out</Text>)
                                     }
 
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#34A853',
         paddingHorizontal: 16,
         paddingTop: 40,
-        height: 250,
+        height: 200,
         width: '100%',
         justifyContent: "center",
 

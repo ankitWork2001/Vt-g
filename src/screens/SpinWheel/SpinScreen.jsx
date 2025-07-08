@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getSpinCount, getSpinLogs, getSpinPrizeList, playSpin, purchaseSpin, errorMsg } from '../../redux/slices/spinSlice';
 import { useFocusEffect } from '@react-navigation/native';
 import Loader from '../../components/Loader/Loader';
+import { getDashboardSummary } from '../../redux/slices/userSlice';
 
 
 // const prizes = [
@@ -38,7 +39,7 @@ function calculateArc(startAngle, endAngle) {
 }
 
 const SpinScreen = () => {
-  const [winner, setWinner] = useState("");
+  const [winner, setWinner] = useState('');
   const [isSpinning, setIsSpinning] = useState(false);
   const { height, width } = Dimensions.get('window');
   const [showModal, setShowModal] = useState(false);
@@ -50,8 +51,7 @@ const SpinScreen = () => {
   const { spinHistory, loading, errorMsg, spinResult, prizeList, spinCount, prizeListLoading, spinCountLoading, purchaseLoading } = useSelector((state) => state.spin)
   const prizes = prizeList?.prizes;
   // console.log('spinHistory', spinHistory);
-  console.log('Spin Count Loading', spinCountLoading);
-  // console.log('Spin Prize', prizeList);
+  // console.log('Spin Result:', spinResult);
 
   useEffect(() => {
     dispatch(getSpinCount());
@@ -111,6 +111,7 @@ const SpinScreen = () => {
       (async () => {
         try {
           await dispatch(getSpinCount());
+          dispatch(getDashboardSummary());
         } catch (e) {
           console.error("Failed to refresh spin count:", e);
         }
@@ -137,7 +138,9 @@ const SpinScreen = () => {
       const result = await dispatch(purchaseSpin(purchaseAmount)).unwrap();
       Alert.alert("Success", result?.message || 'Spin purchased successfully');
       dispatch(getSpinCount());
+      dispatch(getDashboardSummary());
       setShowPurchaseModal(false);
+      setPurchaseAmount('1');
       // dispatch(getSpinLogs());
 
     } catch (error) {
@@ -268,8 +271,10 @@ const SpinScreen = () => {
                         <>
                           {
                             spinCountLoading ? (
-                              // <ActivityIndicator size={'small'} color={'#fff'} />
-                              <Text style={styles.buttonText}>Please wait...</Text>
+                              <View style={{ flexDirection: 'row', gap: 20, alignItems: 'center', justifyContent: 'center' }}>
+                                <ActivityIndicator size={'small'} color={'#fff'} />
+                                <Text style={styles.buttonText}>Please wait...</Text>
+                              </View>
                             ) : (
                               <Text style={styles.buttonText}>
                                 {`Spin Now (${spinCount} left)`}
@@ -283,17 +288,6 @@ const SpinScreen = () => {
 
                   </TouchableOpacity>
 
-
-                  {/* <TouchableOpacity
-            activeOpacity={0.8}
-            style={[styles.button, isSpinning && { backgroundColor: "#999" }]}
-            onPress={handlePlay}
-            disabled={isSpinning}
-          >
-            <Text style={styles.buttonText}>
-              Play
-            </Text>
-          </TouchableOpacity> */}
                 </View>
 
 
@@ -310,12 +304,15 @@ const SpinScreen = () => {
                     <View style={styles.modalContent}>
                       <Image
                         source={require('../../assests/spinPageGiftImage.png')}
-                        style={{ width: 100, height: 100, bottom: 60 }}
+                        style={{ width: 100, height: 100, bottom: 65 }}
                         resizeMode='contain'
                       />
-                      <Text style={{ fontSize: RFValue(30), fontWeight: 'bold', color: '#FF8800', bottom: 40 }}>Lucky Spin Star!</Text>
+                      <Text style={{ fontSize: RFValue(30), fontWeight: 'bold', color: '#FF8800', bottom: 45 }}>Lucky Spin Star!</Text>
                       <Text style={{ fontSize: RFValue(20), fontWeight: '400', marginBottom: 10 }}>You Won</Text>
-                      <Text style={{ fontSize: RFValue(20), marginBottom: 10 }}>{winner}</Text>
+                      <Text style={{ fontSize: RFValue(20), marginBottom: 10 }}>{winner.toLocaleString('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                      })}</Text>
                       <Icon name='keyboard-double-arrow-down' size={24} color="orange" style={{ marginBottom: 10 }} />
 
                       <View style={{ flex: 1 }} />
@@ -323,7 +320,7 @@ const SpinScreen = () => {
                         !spinCount || spinCount <= 0 ? (
                           <TouchableOpacity
                             activeOpacity={0.8}
-                            style={[styles.spinModalButton, { top: height * 0.29, backgroundColor: '#fff' }]}
+                            style={[styles.spinModalButton, { top: height * 0.35, backgroundColor: '#fff' }]}
                             onPress={handlePurchase}
                           >
                             <Text style={[styles.buttonText, { color: '#000' }]}>
@@ -334,7 +331,7 @@ const SpinScreen = () => {
                         ) : (
                           <TouchableOpacity
                             activeOpacity={0.8}
-                            style={[styles.spinModalButton, { top: height * 0.29 }]} onPress={() => {
+                            style={[styles.spinModalButton, { top: height * 0.35 }]} onPress={() => {
                               setShowModal(false);
                               setWinner("");
                               spinWheel();
@@ -523,8 +520,7 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: "#34A853",
-    // paddingHorizontal: 120,
-    paddingVertical: 14,
+    padding: 10,
     borderRadius: 5,
     elevation: 3,
     justifyContent: "center",
@@ -532,6 +528,7 @@ const styles = StyleSheet.create({
     width: "80%",
     borderWidth: 0.5,
     borderColor: "#ccc",
+    height: 50
 
   },
   buttonText: {

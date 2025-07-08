@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react'
 import {
+  FlatList,
   SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View
 } from 'react-native'
 
@@ -33,19 +35,58 @@ const columnWidths = {
 
 const DepositsScreen = () => {
   const dispatch = useDispatch();
-  const { deposits, loading } = useSelector((state) => state.admin);
-  // console.log('Deposits:', deposits);
+  const { deposits, depositsLoading } = useSelector((state) => state.admin);
+  console.log('Deposits:', deposits);
   useEffect(() => {
     dispatch(fetchAllDeposits());
   }, [dispatch]);
+
+  const renderDeposit = (item) => {
+
+    const itemId = item ? item.item._id : 'N/A';
+    const userId = item ? item.item.userId?._id : 'N/A';
+    const amount = item ? item.item.amount?.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }) : 'N/A';
+    const status = item ? item.item.status.charAt(0).toUpperCase() + item.item.status.slice(1) : 'N/A';
+
+    return (
+      <View style={styles.row} key={itemId}>
+        <Text style={[styles.cell, { width: columnWidths.txnId }]}>{itemId}</Text>
+        <Text style={[styles.cell, { width: columnWidths.userId }]}>{userId}</Text>
+        <Text style={[styles.cell, { width: columnWidths.amount }]}>{amount}</Text>
+        <Text style={[styles.cell, { width: columnWidths.screenshot, color: 'blue', textDecorationLine: 'underline' }]}>{item.screenshot}</Text>
+        <Text style={[styles.cell, { width: columnWidths.status, color: '#E5A400' }]}>{status}</Text>
+        <View style={[styles.cell, { width: columnWidths.actions, flexDirection: 'row' }]}>
+          {
+            status === 'Pending' ? (
+              <>
+                <TouchableOpacity
+                  onPress={() => handleToggleDepositApprove(itemId)}
+                >
+                  <Text style={[styles.link, { color: 'green', textDecorationLine: 'underline' }]}>Approve</Text>
+                </TouchableOpacity>
+                <Text style={[styles.reject, { marginLeft: 10 }]}>Reject</Text>
+              </>
+            ) : (
+              <Text style={[styles.cell, { color: '#999' }]}>Approved</Text>
+            )
+          }
+
+        </View>
+      </View>
+    )
+
+  }
   return (
     <>
       <StatusBar backgroundColor={'transparent'} barStyle={"dark-content"} translucent />
 
       <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
         {
-          loading ? (
-            <Loader visible={loading} />
+          depositsLoading ? (
+            <Loader visible={depositsLoading} />
           ) : (
             <ScrollView
               showsVerticalScrollIndicator={false}
@@ -67,19 +108,21 @@ const DepositsScreen = () => {
                       <Text style={[styles.headerCell, { width: columnWidths.actions }]}>Actions</Text>
                     </View>
 
-                    {deposits.map((item, index) => (
-                      <View style={styles.row} key={item._id}>
-                        <Text style={[styles.cell, { width: columnWidths.txnId }]}>{item._id}</Text>
-                        <Text style={[styles.cell, { width: columnWidths.userId }]}>{item.userId._id}</Text>
-                        <Text style={[styles.cell, { width: columnWidths.amount }]}>{item.amount}</Text>
-                        <Text style={[styles.cell, { width: columnWidths.screenshot, color: 'blue', textDecorationLine: 'underline' }]}>{item.screenshot}</Text>
-                        <Text style={[styles.cell, { width: columnWidths.status, color: '#E5A400' }]}>{item.status}</Text>
-                        <View style={[styles.cell, { width: columnWidths.actions, flexDirection: 'row' }]}>
-                          <Text style={[styles.link, { color: 'green', textDecorationLine: 'underline' }]}>Approve</Text>
-                          <Text style={[styles.reject, { marginLeft: 10 }]}>Reject</Text>
+                    {/* {deposits.map((item, index) => (
+                      
+                    ))} */}
+                    <FlatList
+                      data={deposits}
+                      keyExtractor={(_, index) => index.toString()}
+                      renderItem={renderDeposit}
+                      ListEmptyComponent={() => {
+                        <View>
+                          <Text>No Deposits found</Text>
                         </View>
-                      </View>
-                    ))}
+                      }}
+
+
+                    />
                   </View>
                 </ScrollView>
               </View>
@@ -100,7 +143,8 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#F3F3F3",
     margin: 10,
-    borderRadius: 6
+    borderRadius: 6,
+    top: -50
   },
   HorizentalScrollContainer: {
     backgroundColor: '#fff',

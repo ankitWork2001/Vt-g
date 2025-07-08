@@ -1,15 +1,23 @@
 import { Dimensions, StatusBar, StyleSheet, Text, TouchableOpacity, View, ScrollView, FlatList, Image } from 'react-native'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Loader from '../../components/Loader/Loader'
 
 import AdminTemplateHeaderPart from '../../components/Header/AdminTemplateHeaderPart'
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { approveAllWithdrawals } from '../../redux/slices/adminSlice'
+import { useDispatch, useSelector } from 'react-redux'
 const ApproveWithdrawal = () => {
     const inset = useSafeAreaInsets();
+    const dispatch = useDispatch();
     const { height, width } = Dimensions.get('window');
-    // const {with}
-    const isLoading = false
+    const { approveWithdrawals, approveWithdrawalLoading } = useSelector((state) => state.admin);
+    console.log('Approve Withdrawals', approveWithdrawals);
+    console.log('Loading' ,approveWithdrawalLoading);
+
+    useEffect(() => {
+        dispatch(approveAllWithdrawals());
+    }, [dispatch]);
     const withdrawalApproval = [
         {
             id: 1,
@@ -84,10 +92,10 @@ const ApproveWithdrawal = () => {
     return (
         <>
             <StatusBar backgroundColor={'transparent'} barStyle={"dark-content"} translucent />
+            {
+                approveWithdrawalLoading ? <Loader visible={approveWithdrawalLoading} /> : (
+                    <View style={{ flex: 1 }}>
 
-            <View style={{ flex: 1 }}>
-                {
-                    isLoading ? <Loader visible={isLoading} /> : (
                         <ScrollView
                             showsVerticalScrollIndicator={false}
                             contentContainerStyle={[styles.scrollViewContent, { paddingBottom: inset.bottom + 50 }]}
@@ -155,10 +163,11 @@ const ApproveWithdrawal = () => {
                                 {/* </View> */}
                             </View>
                         </ScrollView>
-                    )
-                }
 
-            </View>
+
+                    </View>
+                )
+            }
         </>
     )
 }

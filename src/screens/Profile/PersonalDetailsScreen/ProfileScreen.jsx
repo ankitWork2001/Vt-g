@@ -6,6 +6,7 @@ import ProfileScreenDownrside from './ProfileScreenDownrside';
 import { useDispatch, useSelector } from 'react-redux';
 import { getEmployeeById } from '../../../redux/slices/userSlice';
 import Loader from '../../../components/Loader/Loader';
+import { getSpinCount } from '../../../redux/slices/spinSlice';
 const ProfileScreen = () => {
   const dispatch = useDispatch();
   const insets = useSafeAreaInsets();
@@ -20,6 +21,10 @@ const ProfileScreen = () => {
       dispatch(getEmployeeById(userId));
     }
   }, [userId]);
+  useEffect(() => {
+    dispatch(getSpinCount());
+
+}, [dispatch])
   return (
     <>
       <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />

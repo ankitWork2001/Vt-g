@@ -71,7 +71,8 @@ const investmentSlice = createSlice({
         investmentHistory: [],
         loading: false,
         error: null,
-        investPlanLoading: false,
+        activePlanLoading: false,
+        pastPlanLoading: false,
 
     },
     reducers: {
@@ -105,27 +106,27 @@ const investmentSlice = createSlice({
 
             // Active Investments
             .addCase(fetchActiveInvestments.pending, (state) => {
-                state.loading = true;
+                state.activePlanLoading = true;
             })
             .addCase(fetchActiveInvestments.fulfilled, (state, action) => {
                 state.activeInvestments = action.payload;
-                state.loading = false;
+                state.activePlanLoading = false;
             })
             .addCase(fetchActiveInvestments.rejected, (state, action) => {
-                state.loading = false;
+                state.activePlanLoading = false;
                 state.error = action.payload;
             })
 
             // Investment History
             .addCase(fetchInvestmentHistory.pending, (state) => {
-                state.loading = true;
+                state.pastPlanLoading = true;
             })
             .addCase(fetchInvestmentHistory.fulfilled, (state, action) => {
                 state.investmentHistory = action.payload;
-                state.loading = false;
+                state.pastPlanLoading = false;
             })
             .addCase(fetchInvestmentHistory.rejected, (state, action) => {
-                state.loading = false;
+                state.pastPlanLoading = false;
                 state.error = action.payload;
             });
     },

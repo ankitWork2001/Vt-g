@@ -39,7 +39,7 @@ const columnWidths = {
 const UsersScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const { users, loading } = useSelector((state) => state.admin);
+  const { users, usersLoading } = useSelector((state) => state.admin);
   console.log('Users:', users);
 
   useEffect(() => {
@@ -87,8 +87,8 @@ const UsersScreen = () => {
     <>
       <StatusBar backgroundColor={'transparent'} barStyle={"dark-content"} translucent />
       {
-        loading ? (
-          <Loader visible={loading} />
+        usersLoading ? (
+          <Loader visible={usersLoading} />
 
         ) : (
           <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -164,7 +164,8 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#F3F3F3",
     margin: 10,
-    borderRadius: 6
+    borderRadius: 6,
+    top: -50
   },
   HorizentalScrollContainer: {
     backgroundColor: '#fff',

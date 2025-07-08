@@ -137,7 +137,6 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.errorMsg = action.payload;
             })
-
             // Logout
             .addCase(logout.fulfilled, (state) => {
                 state.userToken = null;

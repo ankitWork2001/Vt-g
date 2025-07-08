@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { signup } from '../../../redux/slices/authSlice';
 import SignUpLoginHeadPart from '../../../components/Header/SignInLoginHeadPart';
+import CountryPicker from 'react-native-country-picker-modal';
 // import { AuthContext } from '../../../context/AuthContext';
 const SignUpScreen = () => {
     const { height, width } = Dimensions.get('window');
@@ -23,12 +24,13 @@ const SignUpScreen = () => {
     const [badUserName, setBadUserName] = useState('')
     const [refrerCode, setReferCode] = useState('');
     const [showPassword, setShowPassword] = useState(true);
-
+    const [countryCode, setCountryCode] = useState('US');
+    const [callingCode, setCallingCode] = useState('+1');
     // const { signup, loading, errorMsg } = useContext(AuthContext);
 
     const navigation = useNavigation();
     const dispatch = useDispatch();
-    const { loading, errorMsg } = useSelector((state) => state.auth); 
+    const { loading, errorMsg } = useSelector((state) => state.auth);
 
     const handleSignUp = async () => {
         if (!name.trim()) {
@@ -57,7 +59,7 @@ const SignUpScreen = () => {
             return;
         }
 
-        const resultAction = await dispatch(signup({ name, username: userName, email, mobile, password , refrerCode }));
+        const resultAction = await dispatch(signup({ name, username: userName, email, mobile, password, refrerCode }));
 
         if (signup.fulfilled.match(resultAction)) {
             Alert.alert('Success', 'Account created successfully');
@@ -77,7 +79,7 @@ const SignUpScreen = () => {
             return
         }
         else if (fieldName === 'email') {
-            setEmail(text);
+            setEmail(text.toLowerCase());
             setBadEmail(false);
             return;
         }
@@ -96,7 +98,7 @@ const SignUpScreen = () => {
             setBadUserName(false);
             return;
         }
-        
+
     }
     const resetForm = () => {
         setName('');
@@ -108,8 +110,8 @@ const SignUpScreen = () => {
         <SafeAreaView style={styles.container}>
 
             <View style={styles.mainContainer}>
-            <SignUpLoginHeadPart  showCreateAcount={false} title={'Sign Up'}/>
-            
+                <SignUpLoginHeadPart showCreateAcount={false} title={'Sign Up'} />
+
             </View>
 
             <View style={styles.body}>
@@ -144,23 +146,36 @@ const SignUpScreen = () => {
                         keyboardType="email-address"
                         placeholderTextColor={'#000'} />
 
+                    {/* Mobile Container */}
                     <Text style={styles.label}>Mobile Number</Text>
-                    <TextInput style={styles.input}
-                        value={mobile}
-                        onChangeText={(text) => textFill(text, 'mobile')}
-                        keyboardType="phone-pad"
-                        placeholderTextColor={'#000'}
-                        maxLength={10} 
-                    />
+
+                    <View style={styles.mobileInputContainer}>
+                        <CountryPicker
+                            countryCode={countryCode}
+                            withFilter
+                            withFlag
+                            withCallingCode
+                            withCallingCodeButton
+                            onSelect={(country) => {
+                                setCountryCode(country.cca2);
+                                setCallingCode(country.callingCode[0]);
+                            }}
+                        />
+                        <TextInput style={styles.inputPassword}
+                            value={mobile}
+                            onChangeText={(text) => textFill(text, 'mobile')}
+                            keyboardType="phone-pad"
+                            placeholderTextColor={'#000'}
+                            maxLength={10}
+                        />
+                    </View>
                     <Text style={styles.label}>Referral Code</Text>
                     <TextInput style={styles.input}
                         value={refrerCode}
                         onChangeText={setReferCode}
                         keyboardType="default"
                         placeholderTextColor={'#000'}
-                       
                     />
-
                     <Text style={styles.label}>Password</Text>
                     <View style={styles.passwordContainer}>
                         <TextInput style={styles.inputPassword}
@@ -231,7 +246,7 @@ const SignUpScreen = () => {
                 </ScrollView>
 
             </View>
-          
+
         </SafeAreaView>
     )
 };
@@ -255,7 +270,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10
     },
     loginArrowBackContain: {
-      
+
         flexDirection: "row",
         alignItems: "center",
         gap: 10,
@@ -325,6 +340,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         marginBottom: 15,
         justifyContent: 'space-between',
+
     },
     inputPassword: {
         width: "90%",
@@ -351,6 +367,8 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         marginTop: 30,
         height: 50,
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     loginButtonText: {
         color: '#fff',
@@ -413,6 +431,17 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         justifyContent: "center",
         alignItems: "center",
+    },
+    mobileInputContainer: {
+        flexDirection: 'row',
+        width: "100%",
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        paddingHorizontal: 10,
+        marginBottom: 15,
+        justifyContent: 'space-between',
+        alignItems: 'center'
     }
 
 });

@@ -13,8 +13,9 @@ const ProfileScreenUpperside = () => {
     const { height } = Dimensions.get('window');
     const navigation = useNavigation()
     // const dispatch = useDispatch();
-    const { userId } = useSelector((state) => state.auth);
-    const { userDetails, wallet, loading } = useSelector((state) => state.user);
+    // const { userId } = useSelector((state) => state.auth);
+    const { userDetails, wallet, loading: userDetailsLoading, userDashboardSummary } = useSelector((state) => state.user);
+    const { spinCount, spinCountLoading, } = useSelector((state) => state.spin)
     // console.log('User ID:', userId);
     // console.log('User Details:', userDetails);
 
@@ -51,7 +52,10 @@ const ProfileScreenUpperside = () => {
                     <Text style={styles.profileName}> {userDetails.name || 'User'}</Text>
                     <Text style={styles.profileID}>ID:EMP12345</Text>
                     <View style={styles.balanceBox}>
-                        <Text style={styles.BalanceText}>Balance: ${wallet.balance || '0.00'}</Text>
+                        <Text style={styles.BalanceText}>Balance: {userDashboardSummary ? userDashboardSummary.balance.toLocaleString('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                        }) : '0.00'}</Text>
                     </View>
                     <Icon style={styles.doubleArrowIcon}
                         color='#FFFFFF'
@@ -81,7 +85,7 @@ const ProfileScreenUpperside = () => {
                     activeOpacity={1}
                     style={styles.levelItem}>
                     <Icon name='diamond' size={22} color='#9747FF' />
-                    <Text style={styles.levelText}>Level: 5 {'\n'}(Silver)</Text>
+                    <Text style={styles.levelText}>Level:5 {'\n'}(Silver)</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     activeOpacity={1}
@@ -94,7 +98,7 @@ const ProfileScreenUpperside = () => {
                     style={styles.levelItem}>
                     <Icon name='radar' size={22} color='#DB0004' />
                     {/* <Text style={styles.levelText}>Spin Left {'\n'}Today:2/5</Text> */}
-                    <Text style={styles.levelText}>Spin Left:{userDetails.spinCount}</Text>
+                    <Text style={styles.levelText}>Spin Left:{spinCount ? spinCount : 0}</Text>
                 </TouchableOpacity>
             </View>
             {/* <Loader visible={loading} /> */}
@@ -151,7 +155,7 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         paddingHorizontal: 1,
         borderRadius: 4,
-        width: 130
+        width: '40%'
     },
     BalanceText: {
         color: '#fff',

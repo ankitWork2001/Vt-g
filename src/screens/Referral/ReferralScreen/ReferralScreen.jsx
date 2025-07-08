@@ -15,12 +15,12 @@ const ReferralScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { height } = Dimensions.get('window');
-  const { referralTree, successMsg, errorMsg, referralCode, loading: referralLoading, commission } = useSelector(state => state.referral);
+  const { referralTree, successMsg, errorMsg, referralCode,  referralLoading, commission } = useSelector(state => state.referral);
   const { summary, loading: summaryLoading, bonusHistory } = useSelector((state) => state.reward)
   const dispatch = useDispatch();
   const isLoading = summaryLoading || referralLoading;
   // console.log('Commission:', commission);
-  // console.log('Referral Tree:', referralTree);
+  console.log('Referral Tree:', referralTree);
   // console.log('Bonus History:', bonusHistory);
   useEffect(() => {
     dispatch(fetchReferralCode());

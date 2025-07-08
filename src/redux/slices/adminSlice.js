@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../api/axiosInstance';
 
-// Dashboard Stats // Completed
+// Dashboard Stats 
 export const fetchDashboardStats = createAsyncThunk(
   'admin/fetchDashboardStats',
   async (_, { rejectWithValue }) => {
@@ -10,14 +10,17 @@ export const fetchDashboardStats = createAsyncThunk(
       // console.log('Dashboard Details:', response.data.stats);
       return response.data.stats;
     } catch (error) {
+
       return rejectWithValue(error.response.data);
     }
   }
 );
 // Approve All Withdrawals
 export const approveAllWithdrawals = createAsyncThunk("admin/approveAllWithdrawals", async (_, thunkAPI) => {
+
   try {
     const res = await axiosInstance.get("/admin/approvewithdrawals");
+    // console.log('Approve',res.data);
     return res.data.transactions;
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response.data);
@@ -27,12 +30,12 @@ export const approveAllWithdrawals = createAsyncThunk("admin/approveAllWithdrawa
 export const createInvestmentPlan = createAsyncThunk("admin/createInvestmentPlan", async (payload, thunkAPI) => {
   try {
     const res = await axiosInstance.post("/admin/investment/plan", payload);
-    return res.data.plan;
+    return res.data
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response.data);
   }
 });
-// All Investment Plans // completed
+// All Investment Plans 
 export const fetchAllInvestmentPlans = createAsyncThunk(
   'admin/fetchAllInvestmentPlans',
   async (_, { rejectWithValue }) => {
@@ -44,7 +47,7 @@ export const fetchAllInvestmentPlans = createAsyncThunk(
     }
   }
 );
-// Fetch User Investments
+// Fetch User Investments 
 export const fetchUserInvestments = createAsyncThunk("admin/fetchUserInvestments", async (_, thunkAPI) => {
   try {
     const res = await axiosInstance.get("/admin/userinvestments");
@@ -58,8 +61,8 @@ export const updateInvestmentPlan = createAsyncThunk(
   'admin/updateInvestmentPlan',
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.put(`/admin/plan/${id}`, data);
-      return response.data.data;
+      const response = await axiosInstance.put(`/admin/investment/updateplan/${id}`, data);
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
     }
@@ -160,7 +163,7 @@ export const fetchAllWithdrawals = createAsyncThunk(
       return rejectWithValue(error.response.data);
     }
   }
-); 
+);
 
 // All Spins
 export const fetchSpinLogs = createAsyncThunk(
@@ -187,19 +190,19 @@ export const fetchReferralStats = createAsyncThunk(
     }
   }
 );
+// delete investment plan
+export const deleteInvestmentPlan = createAsyncThunk(
+  'admin/deletePlan',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.delete(`/admin/deleteplan/${id}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
 
-// All User Investments
-// export const fetchAllUserInvestments = createAsyncThunk(
-//   'admin/fetchAllUserInvestments',
-//   async (_, { rejectWithValue }) => {
-//     try {
-//       const response = await axiosInstance.get('/admin/investments');
-//       return response.data.investments;
-//     } catch (error) {
-//       return rejectWithValue(error.response.data);
-//     }
-//   }
-// );
 const adminSlice = createSlice({
   name: 'admin',
   initialState: {
@@ -210,36 +213,62 @@ const adminSlice = createSlice({
     userInvestments: [],
     deposits: [],
     withdrawals: [],
+    approveWithdrawals: [],
     spins: [],
     referralStats: [],
     transactionReports: [],
     loading: false,
     error: null,
     singleUserLoading: false,
+    loadingDeletePlan: null,
+    createInvestmentPlanLoading: null,
+    updateInvestmentLoading : null,
+    approveWithdrawalLoading : null,
+    investmentPlanFetchLoading: false,
+    dashboardLoading: false,
+    depositsLoading: false,
+    reportingAndTransactionsLoading: false,  
+    spinLogsLoading: false,
+    usersInvestmentsLoading: false,
+    usersLoading: false,
+    withdrawalsLoading: false,
+    referralStatsLoading: false,
+
   },
   reducers: {},
   extraReducers: (builder) => {
     builder
       // Dashboard Stats
       .addCase(fetchDashboardStats.pending, (state) => {
-        state.loading = true;
+        state.dashboardLoading = true;
         state.error = null;
       })
       .addCase(fetchDashboardStats.fulfilled, (state, action) => {
-        state.loading = false;
+        state.dashboardLoading = false;
         state.dashboardStats = action.payload;
       })
       .addCase(fetchDashboardStats.rejected, (state, action) => {
-        state.loading = false;
+        state.dashboardLoading = false;
         state.error = action.payload;
       })
       // Users
+      .addCase(fetchAllUsers.pending, (state) => {
+        state.usersLoading = true;
+        state.error = null;
+      })
       .addCase(fetchAllUsers.fulfilled, (state, action) => {
         state.users = action.payload;
-        state.loading = false;
+        state.usersLoading = false;
+      })
+      .addCase(fetchAllUsers.rejected, (state, action) => {
+        state.usersLoading = false;
+        state.error = action.payload;
       })
       // Single User
-      
+      .addCase(fetchUserById.pending, (state) => {
+        state.singleUserLoading = true;
+        state.error = null;
+      })
       .addCase(fetchUserById.fulfilled, (state, action) => {
         state.singleUser = action.payload;
         state.singleUserLoading = false;
@@ -249,67 +278,174 @@ const adminSlice = createSlice({
         state.error = action.payload;
       })
       // Toggle User Status
+      .addCase(toggleUserStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(toggleUserStatus.fulfilled, (state, action) => {
-        // You may want to update user status in users list if needed
+        state.loading = false;
         state.singleUser = action.payload;
       })
+      .addCase(toggleUserStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
       // Investment Plans
+      .addCase(fetchAllInvestmentPlans.pending, (state) => {
+        state.investmentPlanFetchLoading = true;
+        state.error = null;
+      })
       .addCase(fetchAllInvestmentPlans.fulfilled, (state, action) => {
         state.investmentPlans = action.payload;
-        state.loading = false;
+        state.investmentPlanFetchLoading = false;
       })
-
-      // Deposits and Withdrawals
+      .addCase(fetchAllInvestmentPlans.rejected, (state, action) => {
+        state.investmentPlanFetchLoading = false;
+        state.error = action.payload;
+      })
+      // Deposits 
+      .addCase(fetchAllDeposits.pending, (state) => {
+        state.depositsLoading = true;
+        state.error = null;
+      })
       .addCase(fetchAllDeposits.fulfilled, (state, action) => {
         state.deposits = action.payload;
-        state.loading = false;
+        state.depositsLoading = false;
+      })
+      .addCase(fetchAllDeposits.rejected, (state, action) => {
+        state.depositsLoading = false;
+        state.error = action.payload;
+      })
+      // Withdrawals
+      .addCase(fetchAllWithdrawals.pending, (state) => {
+        state.withdrawalsLoading = true;
+        state.error = null;
       })
       .addCase(fetchAllWithdrawals.fulfilled, (state, action) => {
         state.withdrawals = action.payload;
-        state.loading = false;
+        state.withdrawalsLoading = false;
+      })
+      .addCase(fetchAllWithdrawals.rejected, (state, action) => {
+        state.withdrawalsLoading = false;
+        state.error = action.payload;
       })
       // Update Investment Plan
-      .addCase(updateInvestmentPlan.fulfilled, (state, action) => {
-        // optionally update the investmentPlans list
-
+      .addCase(updateInvestmentPlan.pending, (state) => {
+        state.updateInvestmentLoading = true;      
+        state.error = null;
       })
-      // Spins
+      .addCase(updateInvestmentPlan.fulfilled, (state, action) => {
+        state.updateInvestmentLoading= false;
+        // const updated = action.payload.updatedPlan;
+        // state.investmentPlans = state.investmentPlans.map(plan =>
+        //   plan._id === updated._id ? updated : plan
+        // );
+      })
+      .addCase(updateInvestmentPlan.rejected, (state, action) => {
+        state.updateInvestmentLoading = false;
+        state.error = action.payload;
+      })
+
+      // Spin Logs
+      .addCase(fetchSpinLogs.pending, (state) => {
+        state.spinLogsLoading = true;
+        state.error = null;
+      })
+
       .addCase(fetchSpinLogs.fulfilled, (state, action) => {
         state.spins = action.payload;
-        state.loading = false;
+        state.spinLogsLoading = false;
+      })
+      .addCase(fetchSpinLogs.rejected, (state, action) => {
+        state.spinLogsLoading = false;
+        state.error = action.payload;
       })
       // Referral Stats
+      .addCase(fetchReferralStats.pending, (state) => {
+        state.referralStatsLoading = true;
+        state.error = null;
+      })
       .addCase(fetchReferralStats.fulfilled, (state, action) => {
         state.referralStats = action.payload;
+        state.referralStatsLoading = false;
+      })
+      .addCase(fetchReferralStats.rejected, (state, action) => {
+        state.referralStatsLoading = false;
+        state.error = action.payload;
       })
       // Transaction Reports
+      .addCase(fetchTransactionReports.pending, (state) => {
+        state.reportingAndTransactionsLoading = true;
+        state.error = null;
+      })
       .addCase(fetchTransactionReports.fulfilled, (state, action) => {
         state.transactionReports = action.payload;
+        state.reportingAndTransactionsLoading = false;
+      })
+      .addCase(fetchTransactionReports.rejected, (state, action) => {
+        state.reportingAndTransactionsLoading = false;
+        state.error = action.payload;
       })
       // Create Investment Plan
+      .addCase(createInvestmentPlan.pending, (state) => {
+        state.createInvestmentPlanLoading = true;
+        state.error = null;
+      })
       .addCase(createInvestmentPlan.fulfilled, (state, action) => {
-        state.investmentPlans.push(action.payload);
-        state.loading = false;
+        // state.investmentPlans.push(action.payload);
+        state.createInvestmentPlanLoading = false;
+      })
+      .addCase(createInvestmentPlan.rejected, (state, action) => {
+        state.createInvestmentPlanLoading = false;
+        state.error = action.payload;
       })
       // Fetch User Investments
+      .addCase(fetchUserInvestments.pending, (state) => {
+        state.usersInvestmentsLoading = true;
+        state.error = null;
+      })
       .addCase(fetchUserInvestments.fulfilled, (state, action) => {
         state.userInvestments = action.payload;
-        state.loading = false;
+        state.usersInvestmentsLoading = false;
+      })
+      .addCase(fetchUserInvestments.rejected, (state, action) => {
+        state.usersInvestmentsLoading = false;
+        state.error = action.payload;
       })
       // Approve All Withdrawals
+      .addCase(approveAllWithdrawals.pending, (state) => {
+        state.approveWithdrawalLoading = true;
+        state.error = null;
+      })
       .addCase(approveAllWithdrawals.fulfilled, (state, action) => {
-        state.withdrawals = action.payload;
-        state.loading = false;
+        state.approveWithdrawalLoading = false;
+        state.approveWithdrawals = action.payload;
+      })
+      .addCase(approveAllWithdrawals.rejected, (state, action) => {
+        state.approveWithdrawalLoading = false;
+        state.error = action.payload;
       })
       // Toggle Deposit Status
+      .addCase(toggleDepositStatus.pending, (state) => {
+        // state.loading = true;
+        state.error = null;
+      })
       .addCase(toggleDepositStatus.fulfilled, (state, action) => {
         const updatedDeposits = state.deposits.map(deposit =>
           deposit.id === action.payload.id ? action.payload : deposit
         );
         state.deposits = updatedDeposits;
-        state.loading = false;
+        // state.loading = false;
+      })
+      .addCase(toggleDepositStatus.rejected, (state, action) => {
+        // state.loading = false;
+        state.error = action.payload;
       })
       // Toggle Withdrawal Status
+      .addCase(toggleWithdrawalStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(toggleWithdrawalStatus.fulfilled, (state, action) => {
         const updatedWithdrawals = state.withdrawals.map(withdrawal =>
           withdrawal.id === action.payload.id ? action.payload : withdrawal
@@ -317,31 +453,26 @@ const adminSlice = createSlice({
         state.withdrawals = updatedWithdrawals;
         state.loading = false;
       })
-      // handle fulfilled actions globally
-      .addMatcher(
-        (action) => action.type.startsWith('admin/') && action.type.endsWith('/fulfilled'),
-        (state) => {
-          state.loading = false;
-          state.error = null;
-        }
-      )
-
-      // handle rejections globally
-      .addMatcher(
-        (action) => action.type.startsWith('admin/') && action.type.endsWith('/rejected'),
-        (state, action) => {
-          state.loading = false;
-          state.error = action.payload;
-        }
-      )
-
-      .addMatcher(
-        (action) => action.type.startsWith('admin/') && action.type.endsWith('/pending'),
-        (state) => {
-          state.loading = true;
-          state.error = null;
-        }
-      );
+      .addCase(toggleWithdrawalStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Delete plan  
+      .addCase(deleteInvestmentPlan.pending, (state) => {
+        // state.loadingDeletePlan = true;
+        state.error = null;
+      })
+      .addCase(deleteInvestmentPlan.fulfilled, (state, action) => {
+        const deletedId = action.meta.arg; 
+        state.investmentPlans = state.investmentPlans.filter(
+          (plan) => plan._id !== deletedId
+        );
+        state.loadingDeletePlan = false;
+      })
+      .addCase(deleteInvestmentPlan.rejected, (state, action) => {
+        // state.loadingDeletePlan = false;
+        state.error = action.payload;
+      })
   }
 });
 

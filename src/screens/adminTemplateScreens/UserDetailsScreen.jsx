@@ -9,14 +9,14 @@ import { RFValue } from 'react-native-responsive-fontsize'
 
 const UserDetailsScreen = () => {
   const inset = useSafeAreaInsets();
-  const { singleUser, singleUserLoading, loading } = useSelector((state) => state.admin);
+  const { singleUser, singleUserLoading, } = useSelector((state) => state.admin);
   console.log('Single User Details:', singleUser);
   return (
     <>
       <StatusBar backgroundColor={'transparent'} barStyle={"dark-content"} translucent />
       {
         singleUserLoading ? <Loader visible={singleUserLoading} /> : (
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1 }}>  
 
             <ScrollView
               showsVerticalScrollIndicator={false}
@@ -38,7 +38,10 @@ const UserDetailsScreen = () => {
                       Wallet Balance
                     </Text>
                     <Text style={styles.walletbalenceText}>
-                      ${singleUser ? singleUser.wallet.balance : 'N/A'}
+                      {singleUser ? singleUser.wallet.balance.toLocaleString('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                      }) : 'N/A'}
                     </Text>
                   </View>
                 </View>

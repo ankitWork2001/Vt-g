@@ -14,14 +14,6 @@ import AdminTemplateHeaderPart from '../../components/Header/AdminTemplateHeader
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchSpinLogs } from '../../redux/slices/adminSlice'
 import Loader from '../../components/Loader/Loader'
-
-// const spinLogs = [
-//   { date: '1/2/25', userId: 'UU01', result: 'Win', amount: 'Rs.200' },
-//   { date: '1/2/25', userId: 'UU01', result: 'Win', amount: 'Rs.300' },
-//   { date: '1/2/25', userId: 'UU01', result: 'Win', amount: 'Rs.200' },
-//   { date: '1/2/25', userId: 'UU01', result: 'Win', amount: 'Rs.400' },
-// ]
-
 const columnWidths = {
   date: 100,
   userId: 100,
@@ -31,8 +23,8 @@ const columnWidths = {
 
 const SpinLogsScreen = () => {
   const dispatch = useDispatch();
-  const { spins, loading } = useSelector((state) => state.admin);
-  // console.log('Spin Logs:', spins);
+  const { spins, spinLogsLoading } = useSelector((state) => state.admin);
+  console.log('Spin Logs:', spins);
   useEffect(() => {
     dispatch(fetchSpinLogs());
   }, [dispatch]);
@@ -40,7 +32,7 @@ const SpinLogsScreen = () => {
     <>
       <StatusBar backgroundColor={'transparent'} barStyle={"dark-content"} translucent />
       {
-        loading ? (<Loader visible={loading} />)
+        spinLogsLoading ? (<Loader visible={spinLogsLoading} />)
           : (
             <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
 
@@ -66,7 +58,10 @@ const SpinLogsScreen = () => {
                           <Text style={[styles.cell, { width: columnWidths.userId }]}>{item._id || 'N/A'}</Text>
                           <Text style={[styles.cell, { width: columnWidths.userId }]}>{item.userId?.name || 'N/A'}</Text>
                           <Text style={[styles.cell, { width: columnWidths.result }]}> {item.userId?._id}</Text>
-                          <Text style={[styles.cell, { width: columnWidths.amount }]}> ${item.resultValue}</Text>
+                          <Text style={[styles.cell, { width: columnWidths.amount }]}> {item.resultValue.toLocaleString('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                          })}</Text>
                         </View>
                       ))}
                     </View>
@@ -88,7 +83,8 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#F3F3F3",
     margin: 10,
-    borderRadius: 6
+    borderRadius: 6,
+    top: -50
   },
 
   HorizentalScrollContainer: {

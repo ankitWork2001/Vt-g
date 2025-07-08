@@ -8,12 +8,12 @@ import SignUpLoginHeadPart from '../../../components/Header/SignInLoginHeadPart'
 import Loader from '../../../components/Loader/Loader';
 import { useDispatch, useSelector } from 'react-redux';
 import { login } from '../../../redux/slices/authSlice';
-import { getEmployeeById } from '../../../redux/slices/userSlice';
+import { getDashboardSummary, getEmployeeById } from '../../../redux/slices/userSlice';
 import jwtDecode from 'jwt-decode';
 
 const LoginScreen = () => {
     const { height, width } = Dimensions.get('window');
-    // const { login, loading, errorMsg } = useContext(AuthContext);
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [badPassword, setBadPassword] = useState('')
@@ -22,8 +22,6 @@ const LoginScreen = () => {
     const [showPassword, setShowPassword] = useState(true);
     const dispatch = useDispatch();
     const loading = useSelector((state) => state.auth.loading);
-    const errorMsg = useSelector((state) => state.auth.errorMsg);
-    const { userDetails, } = useSelector((state) => state.user);
     const handleLogin = async () => {
         if (!email.trim()) {
             setBadEmail(true);
@@ -42,9 +40,9 @@ const LoginScreen = () => {
                 const token = resultAction.payload?.token || resultAction.payload;
                 const decoded = jwtDecode(token);
                 const userId = decoded?.id;
-
                 //  Fetch user details
                 const userResult = await dispatch(getEmployeeById(userId));
+                dispatch(getDashboardSummary()); // for updated daashboard for home screen
                 const user = userResult.payload;
                 // Navigate based on role
                 const role = user?.role?.toLowerCase();
@@ -68,7 +66,7 @@ const LoginScreen = () => {
     };
     const textFill = (text, fieldName) => {
         if (fieldName === 'email') {
-            setEmail(text);
+            setEmail(text.toLowerCase());
             setBadEmail(false);
             return;
         }
@@ -81,9 +79,9 @@ const LoginScreen = () => {
     }
     return (
         <SafeAreaView style={styles.container}>
-            <SignUpLoginHeadPart showCreateAcount={true} title={'Log In'}/>
+            <SignUpLoginHeadPart showCreateAcount={true} title={'Log In'} />
             <View style={styles.body}>
-                <Text style={styles.welcomeText}>WelCome Back!</Text>
+                <Text style={styles.welcomeText}>Welcome Back!</Text>
 
                 <Text style={styles.label}>E-Mail Address</Text>
                 <TextInput style={styles.input}
@@ -101,8 +99,8 @@ const LoginScreen = () => {
                         secureTextEntry={showPassword}
                         placeholderTextColor={'#000'}
                     />
-                    <TouchableOpacity 
-                    onPress={() => setShowPassword(!showPassword)}
+                    <TouchableOpacity
+                        onPress={() => setShowPassword(!showPassword)}
                     >
                         <Icon
                             style={[styles.icon, { right: width * 0.01, top: height * 0.012 }]}
@@ -112,7 +110,9 @@ const LoginScreen = () => {
                         />
                     </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={styles.forgotPassword}>
+                <TouchableOpacity
+                    onPress={() => navigation.navigate('ForgetPasswordScreen')}
+                    style={styles.forgotPassword}>
                     <Text style={styles.forgotPasswordText}>Forgot Password ?</Text>
                 </TouchableOpacity>
 
@@ -164,7 +164,7 @@ const LoginScreen = () => {
 }
 const styles = StyleSheet.create({
     container: {
-        // flex: 1,
+        flex: 1,
         backgroundColor: '#fff',
 
     },
@@ -173,7 +173,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderTopLeftRadius: 25,
         borderTopRightRadius: 25,
-        marginTop: -100
+        marginTop: -100,
+        height: '100%',
     },
     welcomeText: {
         fontSize: RFValue(20),
@@ -193,10 +194,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         paddingVertical: 8,
         marginBottom: 15,
-        color:'#000'
+        color: '#000'
     },
     passwordContainer: {
-       
+
         flexDirection: 'row',
         width: "100%",
         borderWidth: 1,
@@ -207,9 +208,8 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     inputPassword: {
-       
         width: "90%",
-        color:'#000'
+        color: '#000'
         // flex: 1
     },
     icon: {
@@ -229,8 +229,8 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         marginTop: 20,
         height: 50,
-       
-
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     loginButtonText: {
         color: '#fff',

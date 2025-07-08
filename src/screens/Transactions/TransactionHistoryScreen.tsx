@@ -25,19 +25,11 @@ const filterTabs = [
     { label: 'Bonus', key: 'bonus' },
 ] as const;
 
-// const transactions = [
-//     { date: '1 May 2025', type: 'Deposit', amount: '$1,000', status: 'Completed' },
-//     { date: '2 May 2025', type: 'Withdraw', amount: '$520', status: 'Pending' },
-//     { date: '2 May 2025', type: 'Bonus', amount: '$1,000', status: 'Completed' },
-//     { date: '3 May 2025', type: 'Deposit', amount: '$1,000', status: 'Completed' },
-//     { date: '4 May 2025', type: 'Bonus', amount: '$1,000', status: 'Completed' },
-// ];
-
 const TransactionHistoryScreen = () => {
     const navigation = useNavigation();
     const [selectedType, setSelectedType] = useState<TransactionType>('all');
     const dispatch = useDispatch();
-    const { transactions, loading } = useSelector((state) => state.wallet);
+    const { transactions, loading } = useSelector((state:any) => state.wallet);
     console.log('Transactions:', transactions);
 
     useEffect(() => {
@@ -57,6 +49,9 @@ const TransactionHistoryScreen = () => {
             currency: 'USD',
         });
         return (
+          
+
+           
             <View style={styles.row}>
                 <Text style={styles.cell}>{date}</Text>
                 <Text style={styles.cell}>{type}</Text>
@@ -65,6 +60,7 @@ const TransactionHistoryScreen = () => {
                     {status}
                 </Text>
             </View>
+          
         )
     };
 
@@ -122,7 +118,7 @@ const TransactionHistoryScreen = () => {
                                 data={filteredTransactions}
                                 keyExtractor={(_, index) => index.toString()}
                                 renderItem={renderItem}
-                                contentContainerStyle={{ paddingBottom: 30 }}
+                                contentContainerStyle={{ paddingBottom: 30 , }}
                             />
                         </View>
                     </SafeAreaView>
@@ -165,7 +161,7 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: RFValue(16),
         fontWeight: '400',
-        margin: 25,
+        margin: 15,
         color: '#444',
     },
     tabs: {
@@ -215,6 +211,7 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderBottomWidth: 1,
         borderColor: '#eee',
+       
     },
     cell: {
         flex: 1,

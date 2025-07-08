@@ -16,16 +16,6 @@ import { fetchAllInvestmentPlans, fetchUserInvestments } from '../../redux/slice
 import Loader from '../../components/Loader/Loader'
 import moment from 'moment'
 
-
-// const investments = new Array(5).fill({
-//   userId: 'UU01',
-//   planName: 'Gold',
-//   amount: 'Rs.500',
-//   roi: '2.5%',
-//   status: 'Active',
-//   date: '1/25–15/25',
-// })
-
 const columnWidths = {
   userId: 80,
   planName: 100,
@@ -39,7 +29,7 @@ const InvestmentsScreen = () => {
 
   const dispatch = useDispatch();
   // const { investmentPlans, loading } = useSelector((state) => state.admin);
-  const { userInvestments, loading } = useSelector((state) => state.admin);
+  const { userInvestments, usersInvestmentsLoading } = useSelector((state) => state.admin);
   // console.log('investmentPlans', investmentPlans);
   console.log('userInvestments', userInvestments);
   useEffect(() => {
@@ -49,8 +39,8 @@ const InvestmentsScreen = () => {
     <>
       <StatusBar backgroundColor={'transparent'} barStyle={"dark-content"} translucent />
       {
-        loading ? (
-          <Loader visible={loading} />
+        usersInvestmentsLoading ? (
+          <Loader visible={usersInvestmentsLoading} />
         ) : (
           <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
             <ScrollView>
@@ -74,9 +64,12 @@ const InvestmentsScreen = () => {
                     {userInvestments.map((item, index) => (
                       <View style={styles.row} key={index}>
                         <Text style={[styles.cell, { width: columnWidths.userId }]}>{item ? item._id : 'N/A'}</Text>
-                        <Text style={[styles.cell, { width: columnWidths.planName }]}>{item ? item.planId.name : 'N/A'}</Text>
-                        <Text style={[styles.cell, { width: columnWidths.amount }]}>${item ? item.amount : 'N/A'}</Text>
-                        <Text style={[styles.cell, { width: columnWidths.roi }]}>{item ? item.planId.roiPercent : 'N/A'}</Text>
+                        <Text style={[styles.cell, { width: columnWidths.planName }]}>{item ? item.planId?.name : 'N/A'}</Text>
+                        <Text style={[styles.cell, { width: columnWidths.amount }]}>{item ? item.amount.toLocaleString('en-US', {
+                                            style: 'currency',
+                                            currency: 'USD',
+                                        }) : 'N/A'}</Text>
+                        <Text style={[styles.cell, { width: columnWidths.roi }]}>{item ? item.planId?.roiPercent : 'N/A'}</Text>
                         <Text style={[styles.cell, { width: columnWidths.status }]}>{item ? item.status?.charAt(0).toUpperCase() + item.status.slice(1) : 'N/A'}</Text>
                         <Text style={[styles.cell, { width: columnWidths.date }]}>{item ? moment(item.startDate).format('MMM DD, YYYY') : 'N/A'}</Text>
                       </View>
@@ -100,10 +93,12 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#F3F3F3",
     margin: 10,
-    borderRadius: 6
+    borderRadius: 6,
+    top:-50
   },
   HorizentalScrollContainer: {
     backgroundColor: '#fff',
+   
   },
   TableContainer: {
 

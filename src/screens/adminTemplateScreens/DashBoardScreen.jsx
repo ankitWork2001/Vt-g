@@ -27,7 +27,7 @@ const DashBoardScreen = () => {
     const inset = useSafeAreaInsets();
     const { height, width } = Dimensions.get('window');
     const { userId } = useSelector((state) => state.auth);
-    const { dashboardStats, loading: dashboardLoading } = useSelector(state => state.admin);
+    const { dashboardStats,  dashboardLoading } = useSelector(state => state.admin);
     const dispatch = useDispatch();
     const navigation = useNavigation();
     const { userDetails, loading: userLoading } = useSelector((state) => state.user);
@@ -103,7 +103,10 @@ const DashBoardScreen = () => {
                                                 <Icon name="upload" size={45} color="#D4A800" />
                                                 <View style={styles.textContainer}>
                                                     <Text style={styles.label}>Total Deposits</Text>
-                                                    <Text style={styles.value}>${dashboardStats ? dashboardStats?.totalDeposits : '0.00'}</Text>
+                                                    <Text style={styles.value}>{dashboardStats ? dashboardStats?.totalDeposits.toLocaleString('en-US', {
+                                            style: 'currency',
+                                            currency: 'USD',
+                                        }) : '0.00'}</Text>
                                                 </View>
                                             </View>
                                             <Text style={styles.ongoingDashboardCardText}>● +$12,300 today</Text>
@@ -118,7 +121,10 @@ const DashBoardScreen = () => {
                                                 <Icon name="download" size={45} color="#8B5CF6" />
                                                 <View style={styles.textContainer}>
                                                     <Text style={styles.label}>Total Withdrawals</Text>
-                                                    <Text style={styles.value}>${dashboardStats ? dashboardStats?.totalWithdrawals : '0.00'}</Text>
+                                                    <Text style={styles.value}>{dashboardStats ? dashboardStats?.totalWithdrawals.toLocaleString('en-US', {
+                                            style: 'currency',
+                                            currency: 'USD',
+                                        }) : '0.00'}</Text>
                                                 </View>
                                             </View>
                                             <Text style={styles.ongoingDashboardCardText}>● $8,100 withdrawn today</Text>

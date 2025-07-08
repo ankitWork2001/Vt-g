@@ -1,30 +1,14 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import {
-    View,
-    Text,
-    StyleSheet,
-    ScrollView,
-    SafeAreaView,
-    Image,
-    Dimensions,
-    TouchableOpacity,
-    FlatList,
-    NativeSyntheticEvent,
-    NativeScrollEvent,
-    Pressable,
-    Alert,
-    ActivityIndicator,
-    StatusBar
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, Image, Dimensions, TouchableOpacity, FlatList, NativeSyntheticEvent, NativeScrollEvent, Pressable, Alert, ActivityIndicator, StatusBar} from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { getEmployeeById } from '../../redux/slices/userSlice';
+import { getDashboardSummary, getEmployeeById } from '../../redux/slices/userSlice';
 import Loader from '../../components/Loader/Loader';
-import { getSpinPrizeList } from '../../redux/slices/spinSlice';
+import { getSpinCount, getSpinPrizeList } from '../../redux/slices/spinSlice';
 
 interface ImageItem {
     id: string;
@@ -44,9 +28,10 @@ const HomeScreen: React.FC = () => {
     const flatListRef = useRef<FlatList<ImageItem>>(null);
     const navigation = useNavigation();
     const dispatch = useDispatch();
-    const { userDetails, loading } = useSelector((state: any) => state.user);
+    const { userDetails, loading, userDashboardSummary } = useSelector((state: any) => state.user);
     const { userId, } = useSelector((state: any) => state.auth);
-    // console.log('User Detail in Home Page',userDetails);
+    // console.log('User Detail in Home Page', userDetails);
+    console.log('userDeshboard', userDashboardSummary);
 
     useEffect(() => {
         if (userId) {
@@ -55,6 +40,8 @@ const HomeScreen: React.FC = () => {
     }, [userId]);
     useEffect(() => {
         dispatch(getSpinPrizeList());
+        dispatch(getDashboardSummary());
+        dispatch(getSpinCount());
 
     }, [dispatch])
     return (
@@ -146,17 +133,26 @@ const HomeScreen: React.FC = () => {
                                 <View style={styles.summaryCard}>
                                     <View style={styles.summaryItem}>
                                         <Text style={styles.label}>Today's Earnings</Text>
-                                        <Text style={[styles.value, { color: '#007BFF' }]}>$120</Text>
+                                        <Text style={[styles.value, { color: '#007BFF' }]}>{userDashboardSummary ? userDashboardSummary.todaysEarnings.toLocaleString('en-US', {
+                                            style: 'currency',
+                                            currency: 'USD',
+                                        }) : 0}</Text>
                                     </View>
                                     <View style={styles.divider} />
                                     <View style={styles.summaryItem}>
                                         <Text style={styles.label}>Balance</Text>
-                                        <Text style={[styles.value, { color: '#fbc02d' }]}>${userDetails ? userDetails?.wallet?.balance : '0'}</Text>
+                                        <Text style={[styles.value, { color: '#fbc02d' }]}>{userDashboardSummary ? userDashboardSummary.balance.toLocaleString('en-US', {
+                                            style: 'currency',
+                                            currency: 'USD',
+                                        }) : 0}</Text>
                                     </View>
                                     <View style={styles.divider} />
                                     <View style={styles.summaryItem}>
                                         <Text style={styles.label}>Frozen Amount</Text>
-                                        <Text style={[styles.value, { color: 'red' }]}>0</Text>
+                                        <Text style={[styles.value, { color: 'red' }]}>{userDashboardSummary ? userDashboardSummary.frozenAmount.toLocaleString('en-US', {
+                                            style: 'currency',
+                                            currency: 'USD',
+                                        }) : 0}</Text>
                                     </View>
                                 </View>
 

@@ -4,16 +4,64 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RFValue } from 'react-native-responsive-fontsize';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { useSelector } from 'react-redux';
+import Share from 'react-native-share';
+import { Linking, Platform } from 'react-native';
 
 const ReferralPageUpparPart = () => {
     const insets = useSafeAreaInsets();
     const { height } = Dimensions.get('window');
     // console.log(height * 0.03);
     const { referralCode, } = useSelector(state => state.referral);
+    // console.log("referralCode",typeof referralCode);
+
     const copyToClipboardReferralCode = (itemCopy) => {
         Clipboard.setString(itemCopy);
-        Alert.alert('Alert', 'Referral code copied to clipboard');
-    };
+        Alert.alert('Success', 'Referral code copied to clipboard');
+    }; 
+   
+    const message = `Hey! Try this app and earn rewards.\nUse my referral code: *${referralCode}*\nhttps://google.com/`;
+
+    const shareWhatsApp = async () => {
+       
+        try {
+            await Share.shareSingle({
+                message,
+                social: Share.Social.WHATSAPP,
+            });
+        } catch (err) {
+            // fallback: open WhatsApp deep‑link or alert
+            Alert.alert('Message', 'WhatsApp app not available');
+          
+        }
+    }
+
+    const shareTelegram = async () => {
+        try {
+            await Share.shareSingle({
+                message,
+                social: Share.Social.TELEGRAM,
+            });
+        } catch (err) {
+            // fallback: open Telegram deep‑link or alert
+            Alert.alert('Message', 'Telegram app not available');
+           
+        }
+    }
+
+    const shareSMS = async () => {
+        console.log("message", message);
+        const url =
+            Platform.OS === 'android'
+                ? `sms:?body=${encodeURIComponent(message)}`
+                : `sms:&body=${encodeURIComponent(message)}`; // iOS
+
+        const canOpen = await Linking.canOpenURL(url);
+        if (canOpen) {
+            Linking.openURL(url);
+        } else {
+            Alert.alert('Message', 'SMS app not available');
+        }
+    }
     return (
         <SafeAreaView style={styles.MainContainer}>
             <ScrollView
@@ -37,7 +85,7 @@ const ReferralPageUpparPart = () => {
                                     <Text style={styles.codeText}>{referralCode ? referralCode : "N/A"}</Text>
                                 </View>
                                 <TouchableOpacity
-                                    onPress={() => copyToClipboardReferralCode(referralCode)}
+                                    onPress={() => copyToClipboardReferralCode(message)}
                                     style={styles.copySection}>
                                     <Text style={styles.copyText}>COPY</Text>
                                 </TouchableOpacity>
@@ -45,19 +93,28 @@ const ReferralPageUpparPart = () => {
                             <Text style={styles.shareNow}>SHARE NOW</Text>
                         </View>
                         <View style={[styles.socialIconsContainer, { bottom: height * 0.02 }]}>
-                            <TouchableOpacity style={[styles.IconImage]}>
+                            <TouchableOpacity
+                                onPress={shareWhatsApp}
+                                // disabled={!isReady}
+                                style={[styles.IconImage]}>
                                 <Image
                                     source={require('../../../assests/refferalPageWhatsappImage.png')}
                                     resizeMode='contain'
                                 />
                             </TouchableOpacity>
-                            <TouchableOpacity style={[styles.IconImage, { bottom: height * 0.02 }]}>
+                            <TouchableOpacity
+                            //    disabled={!isReady}
+                                onPress={shareTelegram}
+                                style={[styles.IconImage, { bottom: height * 0.02 }]}>
                                 <Image
                                     source={require('../../../assests/refferalPageTelegramImage.png')}
                                     resizeMode='contain'
                                 />
                             </TouchableOpacity>
-                            <TouchableOpacity style={[styles.IconImage]}>
+                            <TouchableOpacity
+                            //    disabled={!isReady}
+                                onPress={shareSMS}
+                                style={[styles.IconImage]}>
                                 <Image
                                     source={require('../../../assests/refferalPageSmsImage.png')}
                                     resizeMode='contain'

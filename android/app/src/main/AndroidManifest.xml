@@ -1,7 +1,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+<queries>
+        <!-- WhatsApp (consumer + business) -->
+        <package android:name="com.whatsapp"/>
+        <package android:name="com.whatsapp.w4b"/>
 
+        <!-- Telegram -->
+        <package android:name="org.telegram.messenger"/>
+
+        <!-- Any SMS / default Messages app -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="sms"/>
+        </intent>
+    </queries>
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"

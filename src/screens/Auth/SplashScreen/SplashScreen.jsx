@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useEffect } from 'react';
 import { Image, ImageBackground, Platform, StatusBar, useWindowDimensions, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { getEmployeeById } from '../../../redux/slices/userSlice';
+import { getDashboardSummary, getEmployeeById } from '../../../redux/slices/userSlice';
 import { decodeUserFromToken } from '../../../utils/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Loader from '../../../components/Loader/Loader';
@@ -65,6 +65,7 @@ const SplashScreen = () => {
     }
     useEffect(() => {
         changeNavigationBarColor('transparent', true); 
+        dispatch(getDashboardSummary()); 
     }, []);
     return (
         <>

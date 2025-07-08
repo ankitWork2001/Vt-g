@@ -55,11 +55,14 @@ const UserWithdraw = () => {
                         {/* Header Content */}
                         <View>
                             <Text
-                                style={styles.headerText}>Hi {userDetails? userDetails?.name : 'User'}, cash out your {'\n'}rewards fast and safe!"</Text>
+                                style={styles.headerText}>Hi {userDetails ? userDetails?.name : 'User'}, cash out your {'\n'}rewards fast and safe!"</Text>
                         </View>
                         {/* Balance and Image */}
                         <View style={styles.headerIcons}>
-                            <Text style={styles.balanceText}>Balance : ${userDetails ? userDetails?.wallet?.balance : '0'}</Text>
+                            <Text style={styles.balanceText}>Balance : ${userDetails ? userDetails?.wallet?.balance.toLocaleString('en-US', {
+                                style: 'currency',
+                                currency: 'USD',
+                            }) : '0'}</Text>
                             <Image
                                 source={require('../../assests/WithdrawImage.png')}
                                 resizeMode='cover'

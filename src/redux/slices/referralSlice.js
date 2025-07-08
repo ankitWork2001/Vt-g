@@ -56,12 +56,13 @@ export const fetchReferralCommission = createAsyncThunk(
 const referralSlice = createSlice({
   name: 'referral',
   initialState: {
-    referralCode: null,
+    referralCode: '',
     referralTree: [],
     commission: 0,
     loading: false,
     successMsg: null,
     errorMsg: null,
+    referralLoading : false
   },
   reducers: {
     clearReferralMessages: (state) => {
@@ -73,13 +74,15 @@ const referralSlice = createSlice({
     builder
 
       // Referral Code
-      .addCase(fetchReferralCode.pending, (state) => { state.loading = true; })
+      .addCase(fetchReferralCode.pending, (state) => { state.referralLoading = true; })
+      
+
       .addCase(fetchReferralCode.fulfilled, (state, action) => {
-        state.loading = false;
+        state.referralLoading = false;
         state.referralCode = action.payload;
       })
       .addCase(fetchReferralCode.rejected, (state, action) => {
-        state.loading = false;
+        state.referralLoading = false;
         state.errorMsg = action.payload;
       })
 

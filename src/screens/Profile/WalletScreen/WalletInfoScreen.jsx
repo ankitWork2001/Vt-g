@@ -18,34 +18,42 @@ import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { getWalletBalance } from '../../../redux/slices/walletSlice';
 import Loader from '../../../components/Loader/Loader';
+import { getRewardWallet } from '../../../redux/slices/rewardSlice';
 
 const WalletInfoScreen = () => {
     const navigation = useNavigation();
     const { height, width } = Dimensions.get('window');
-    const { wallet, loading } = useSelector((state) => state.wallet);
+    const { wallet, loading: walletLoadng } = useSelector((state) => state.wallet);
+    const { rewardWallet, loading: rewardLoadng } = useSelector((state) => state.reward);
     const dispatch = useDispatch();
-
+    const isLoading = walletLoadng || rewardLoadng
     const walletFetched = useRef(false);
-    console.log('Wallet Balance:', wallet, 'Loading:', loading);
+    // console.log('Wallet Balance:', wallet, 'Reward:', rewardWallet);
     useEffect(() => {
         // dispatch(getWalletBalance());
         if (!walletFetched.current) {
             dispatch(getWalletBalance());
             walletFetched.current = true;
         }
-       
+        dispatch(getRewardWallet())
     }, [dispatch]);
     return (
         <>
             <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
             {
-                loading ? (
+                isLoading ? (
 
-                    <Loader visible={loading} />
+                    <Loader visible={isLoading} />
                 ) : (
                     <SafeAreaView style={styles.MainContainer}>
 
-                        <ScrollView>
+                        <ScrollView
+
+                            contentContainerStyle={{
+                                paddingBottom: 120,
+                                
+                            }}
+                        >
                             <View style={styles.headerContentContainer}>
                                 <View style={styles.headerTextContainer}>
                                     <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -71,15 +79,44 @@ const WalletInfoScreen = () => {
                             <Text style={{ fontSize: RFValue(20), marginLeft: 20 }}>Wallet</Text>
                             <View style={styles.card}>
                                 <View style={styles.cardTextContainer}>
-                                    <Text style={styles.cardText}>Main Balance: ${wallet?.balance}</Text>
-                                    <Text style={styles.cardText}>Locked Balance: ${wallet?.balance?.toFixed(2) ?? '0.00'}</Text>
-                                    <Text style={styles.cardText}>Commission: ${wallet?.commission?.toFixed(2) ?? '0.00'}</Text>
+                                    <Text style={styles.cardText}>Main Balance: {wallet ? wallet?.balance.toLocaleString('en-US', {
+                                        style: 'currency',
+                                        currency: 'USD',
+                                    }) : '0'}</Text>
+                                    <Text style={styles.cardText}>Locked Balance: {wallet ? wallet?.
+                                        lockedBalance?.toLocaleString('en-US', {
+                                            style: 'currency',
+                                            currency: 'USD',
+                                        }) : '0.00'}</Text>
+                                    <Text style={styles.cardText}>Commission: {wallet ? wallet?.commission?.toLocaleString('en-US', {
+                                        style: 'currency',
+                                        currency: 'USD',
+                                    }) : '0.00'}</Text>
                                     <Text style={styles.cardText}>Binance Wallet:0x****1234</Text>
                                     <Text style={styles.cardText}>Bonus Cash:$50 (expires on 2025-05-1)</Text>
                                 </View>
                                 <TouchableOpacity style={styles.Button}>
                                     <Text style={styles.ButtonText}>Add/Update Wallet</Text>
                                 </TouchableOpacity>
+                            </View>
+                            <Text style={{ fontSize: RFValue(20), marginLeft: 20 }}>Reward Wallet</Text>
+                            <View style={styles.card}>
+                                <View style={styles.cardTextContainer}>
+                                    <Text style={styles.cardText}>Total Reward Balance: {rewardWallet ? rewardWallet?.rewardBalance.toLocaleString('en-US', {
+                                        style: 'currency',
+                                        currency: 'USD',
+                                    }) : '0'}</Text>
+                                    <Text style={styles.cardText}>Referral Balance: {rewardWallet ? rewardWallet?.referralBalance.toLocaleString('en-US', {
+                                        style: 'currency',
+                                        currency: 'USD',
+                                    }) : '0.00'}</Text>
+                                    <Text style={styles.cardText}>Spin Balance: {rewardWallet ? rewardWallet?.
+                                        spineBalance.toLocaleString('en-US', {
+                                            style: 'currency',
+                                            currency: 'USD',
+                                        }) : '0.00'}</Text>
+
+                                </View>
                             </View>
 
                             <Text style={{ fontSize: RFValue(20), marginLeft: 20, marginTop: 10 }}>Coupons Available:  2</Text>
@@ -139,6 +176,8 @@ const styles = StyleSheet.create({
         margin: 40,
         flexDirection: 'row',
         justifyContent: 'center',
+   
+        
     },
     depositTextBox: {
         width: "50%",
@@ -157,7 +196,7 @@ const styles = StyleSheet.create({
         borderRadius: 6,
         padding: 20,
         margin: 20,
-        marginTop: 30
+        // marginTop: 30
     },
     cardTextContainer: {
         gap: 2

@@ -7,7 +7,7 @@ import SpinLogsScreen from '../screens/adminTemplateScreens/SpinLogsScreen';
 import DepositsScreen from '../screens/adminTemplateScreens/DepositsScreen';
 import WithdrawalsScreen from '../screens/adminTemplateScreens/WithdrawalsScreen';
 import AdminSettingsScreen from '../screens/adminTemplateScreens/AdminSettingsScreen';
-import InvestmentsScreen from '../screens/adminTemplateScreens/InvestmentsScreen';
+import InvestmentsScreen from '../screens/adminTemplateScreens/UserInvestmentsScreen';
 import ApproveWithdrawal from '../screens/adminTemplateScreens/ApproveWithdrawal';
 
 import UserDetailsScreen from '../screens/adminTemplateScreens/UserDetailsScreen';
@@ -24,19 +24,58 @@ const AdminStackNavigator = () => {
             animation: 'fade_from_bottom'
         }}
         >
-            <Stack.Screen name="Home" component={DashBoardScreen} />
-            <Stack.Screen name="Users" component={UsersScreen} />
-            <Stack.Screen name="Investments" component={InvestmentsScreen} />
-            <Stack.Screen name="SpinLogs" component={SpinLogsScreen} />
-            <Stack.Screen name="Deposits" component={DepositsScreen} />
-            <Stack.Screen name="Withdrawals" component={WithdrawalsScreen} />
-            <Stack.Screen name="Settings" component={AdminSettingsScreen} />
-            <Stack.Screen name='ApproveWithdrawal' component={ApproveWithdrawal} />
-            <Stack.Screen name='UserDetailsScreen' component={UserDetailsScreen}/>
-            <Stack.Screen name='AddNewInvestment' component={AddNewInvestment} />
-            <Stack.Screen name='ReferralsScreen' component={ReferralsScreen} />
-            <Stack.Screen name='InvestmentPlans' component={InvestmentPlans} />
-            <Stack.Screen name='ReportingTransactionScreen' component={ReportingTransactionScreen} />
+            <Stack.Screen name="Home" component={DashBoardScreen} 
+            options={{
+                freezeOnBlur: true
+            }}/>
+            <Stack.Screen name="Users" component={UsersScreen} 
+            options={{
+                freezeOnBlur: true
+            }}/>
+            <Stack.Screen name="Investments" component={InvestmentsScreen} 
+            options={{
+                freezeOnBlur: true
+            }}/>
+            <Stack.Screen name="SpinLogs" component={SpinLogsScreen} 
+            options={{
+                freezeOnBlur: true
+            }}/>
+            <Stack.Screen name="Deposits" component={DepositsScreen} 
+            options={{
+                freezeOnBlur: true
+            }}/>
+            <Stack.Screen name="Withdrawals" component={WithdrawalsScreen} 
+            options={{
+                freezeOnBlur: true
+            }}/>
+            <Stack.Screen name="Settings" component={AdminSettingsScreen} 
+            options={{
+                freezeOnBlur: true
+            }}/>
+            <Stack.Screen name='ApproveWithdrawal' component={ApproveWithdrawal} 
+            options={{
+                freezeOnBlur: true
+            }}/>
+            <Stack.Screen name='UserDetailsScreen' component={UserDetailsScreen}
+            options={{
+                freezeOnBlur: true
+            }}/>
+            <Stack.Screen name='AddNewInvestment' component={AddNewInvestment} 
+            options={{
+                freezeOnBlur: true
+            }}/>
+            <Stack.Screen name='ReferralsScreen' component={ReferralsScreen} 
+            options={{
+                freezeOnBlur: true
+            }}/>
+            <Stack.Screen name='InvestmentPlans' component={InvestmentPlans} 
+            options={{
+                freezeOnBlur: true
+            }}/>
+            <Stack.Screen name='ReportingTransactionScreen' component={ReportingTransactionScreen} 
+            options={{
+                freezeOnBlur: true
+            }}/>
         </Stack.Navigator>
     );
 };

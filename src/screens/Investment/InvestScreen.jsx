@@ -1,5 +1,5 @@
-import { ActivityIndicator, Alert, Image, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { ActivityIndicator, Alert, Button, Image, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, findNodeHandle, UIManager, } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { RFValue } from 'react-native-responsive-fontsize';
 import Slider from '@react-native-community/slider';
@@ -10,12 +10,16 @@ import { FlatList } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Loader from '../../components/Loader/Loader';
 import moment from 'moment';
+import { getDashboardSummary } from '../../redux/slices/userSlice';
+
 
 const InvestScreen = () => {
-  const insets = useSafeAreaInsets(); 
-  const { plans, activeInvestments, investmentHistory, loading, error, investPlanLoading } = useSelector(state => state.investment);
+  const insets = useSafeAreaInsets();
+  const scrollViewRef = useRef(null);
+  const sectionRef = useRef(null);
+  const { plans, activeInvestments, investmentHistory, loading, error, pastPlanLoading, activePlanLoading } = useSelector(state => state.investment);
   // console.log('Investment Plans:', plans);
-  console.log('Active Investments:', activeInvestments); 
+  console.log('Active Investments:', activeInvestments);
   // console.log('Investment History:', investmentHistory);
   const navigation = useNavigation();
   const [loadingPlanId, setLoadingPlanId] = useState(null);
@@ -26,32 +30,54 @@ const InvestScreen = () => {
     dispatch(fetchInvestmentHistory());
 
   }, []);
-
+  const scrollToSection2 = () => {
+    const nodeHandle = findNodeHandle(sectionRef.current);
+    if (nodeHandle && scrollViewRef.current) {
+      UIManager.measureLayout(
+        nodeHandle,
+        findNodeHandle(scrollViewRef.current),
+        () => console.log('Measure error'),
+        (x, y) => {
+          scrollViewRef.current.scrollTo({ y, animated: true });
+        }
+      );
+    }
+  };
   const planColors = {
-    'Basic Plan': '#0077FFD9',
+    'Basic Plan': '#34A853',
     'Starter Plan': '#00BFA5D9',
     'Ultra Plan': '#8E24AAD9',
-    'Gold Plan': '#FDBE00D9',
-    'Premium Plan': '#3F51B5D9',
+    'Gold Plan': '#FFD75F',
+    'Premium Plan': '#9747FF',
     'Super Plan': '#FF6F00D9',
     'Standard Plan': '#607D8BD9',
   };
   const renderPlan = ({ item }) => {
-    const backgroundColor = planColors[item.name] || '#0077FFD9'; // fallback color
+    const backgroundColor = planColors[item.name] || 'gray'; // fallback color
     const isLoading = loadingPlanId === item._id;
+    const amount = item ? item?.minAmount.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }) : '0';
+    const durationDays = item ? item.durationDays : '0';
+    const autoPay = item.autoPayout ? 'Yes' : 'No';
+    const name = item ? item.name : 'Plan';
+    const roiPercentage = item ? item.roiPercent : ' 0';
+    // Plans Card 
     return (
+
       <View style={styles.card}>
         <View style={[styles.borderBar, { backgroundColor }]} />
         <View style={styles.content}>
           <View style={styles.textSection}>
             <View style={styles.titleRow}>
               <Icon name="schedule" size={RFValue(14)} color="#2E7D32" />
-              <Text style={styles.title}>{item.name}</Text>
+              <Text style={styles.title}>{name}</Text>
             </View>
-            <Text style={styles.text}>ROI: {item.roiPercent}%</Text>
-            <Text style={styles.text}>Min Amount: ${item.minAmount}</Text>
-            <Text style={styles.text}>Duration: {item.durationDays} Days</Text>
-            <Text style={styles.text}>Auto Payout: {item.autoPayout ? 'Yes' : 'No'}</Text>
+            <Text style={styles.text}>ROI: {roiPercentage}%</Text>
+            <Text style={styles.text}>Min Amount: {amount}</Text>
+            <Text style={styles.text}>Duration: {durationDays} Days</Text>
+            <Text style={styles.text}>Auto Payout: {autoPay}</Text>
           </View>
           <View style={styles.imageContainer}>
             <Image
@@ -64,7 +90,7 @@ const InvestScreen = () => {
           <TouchableOpacity
             disabled={loadingPlanId === item._id}
             activeOpacity={0.7}
-            style={[styles.button, { backgroundColor}]}
+            style={[styles.button, { backgroundColor }]}
             onPress={() => handleSubscribeInvestment(item._id, {
               amount: item.minAmount,
               startDate: new Date().toISOString(),
@@ -89,7 +115,9 @@ const InvestScreen = () => {
       if (subscribeToPlan.fulfilled.match(resultAction)) {
         // console.log('Subscribed Successfully:', resultAction.payload);
         Alert.alert("Success", "You have successfully subscribed to the investment plan.");
-        await dispatch(fetchActiveInvestments())
+        await dispatch(fetchActiveInvestments());
+        dispatch(getDashboardSummary()); // for updated data
+        scrollToSection2(); // scroll to active or ongoing investment
       } else {
         const error = typeof resultAction.payload === 'string'
           ? resultAction.payload
@@ -98,7 +126,7 @@ const InvestScreen = () => {
         Alert.alert('Error', error);
       }
     } catch (error) {
-    
+
       Alert.alert('Error', error.message || 'Unexpected error occurred.');
     }
     finally {
@@ -135,9 +163,9 @@ const InvestScreen = () => {
           />
         </View>
 
-        <Text style={styles.detail}>Invested: ${item.amount}</Text>
+        <Text style={styles.detail}>Invested: ${item.amount ? item.amount : '0'}</Text>
         <Text style={styles.detail}>Earnings: ${item.earnings ? item.earnings : '0'}</Text>
-        <Text style={styles.detail}>Next Payout: {item.nextPayout}</Text>
+        <Text style={styles.detail}>Next Payout: {item.nextPayout ? item.nextPayout : '0'}</Text>
         <Text style={styles.detail}>End Date: {endDate}</Text>
       </View>
     )
@@ -165,24 +193,30 @@ const InvestScreen = () => {
       <StatusBar barStyle={'dark-content'} backgroundColor={'transparent'} translucent />
       {
         loading ? (
-          <Loader visible={loading} />
+          <Loader visible={loading} /> 
         ) : (
-          <SafeAreaView style={styles.MainContainer}>
+          <SafeAreaView
+            style={styles.MainContainer}>
+
             <ScrollView
+              ref={scrollViewRef}
               contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 100 }}
               showsVerticalScrollIndicator={false}
             >
+
               <View>
                 <View style={[styles.headerContainer, { paddingTop: insets.top + 50, bottom: insets.bottom + 10 }]}>
                   <Text style={styles.headerText}>Choose Your Investment Plan</Text>
                   <TouchableOpacity>
                     <Icon name='notifications' size={20} color='#fff' />
                   </TouchableOpacity>
+
                 </View>
+                {/* Plans Card */}
                 <FlatList
                   data={plans}
                   scrollEnabled={false}
-                  keyExtractor={(item) => item._id}
+                  keyExtractor={(_,index) => index}
                   renderItem={renderPlan}
                   contentContainerStyle={styles.container}
                   showsVerticalScrollIndicator={false}
@@ -190,278 +224,68 @@ const InvestScreen = () => {
                     <Text style={{ textAlign: 'center', marginTop: 20, fontSize: 15 }}>No investment plans available</Text>
                   )}
                 />
-                {/* Plans Card */}
-                {/* <View style={styles.card}>
-              <View style={[styles.borderBar, { backgroundColor: '#2E7D32', }]} />
-              <View style={styles.content}>
-                <View style={styles.textSection}>
-                  <View style={styles.titleRow}>
-                    <Icon name="schedule" size={14} color="#2E7D32" />
-                    <Text style={styles.title}> Basic Plan</Text>
-                  </View>
-                  <Text style={styles.text}>ROI: 1.5% Daily</Text>
-                  <Text style={styles.text}>Min Amount: $500</Text>
-                  <Text style={styles.text}>Duration: 3 Days</Text>
-                  <Text style={styles.text}>Payout: Daily</Text>
-                </View>
-                <View style={styles.imageContainer}>
-                  <Image
-                    source={require('../../assests/investMan.png')}
-                    style={styles.image}
-                  />
-                </View>
-              </View>
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity style={[styles.button, { backgroundColor: '#2E7D32' }]}>
-                  <Text style={styles.buttonText}>Invest Now</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-            <View style={styles.card}>
-              <View style={[styles.borderBar, { backgroundColor: '#FDBE00', }]} />
-              <View style={styles.content}>
-                <View style={styles.textSection}>
-                  <View style={styles.titleRow}>
-                    <Icon name="bolt" size={14} color="#FDBE00" />
-                    <Text style={styles.title}> Gold Plan</Text>
-                  </View>
-                  <Text style={styles.text}>ROI: 2.5% Daily</Text>
-                  <Text style={styles.text}>Min Amount: $2000</Text>
-                  <Text style={styles.text}>Duration: 7 Days</Text>
-                  <Text style={styles.text}>Payout: Weekly</Text>
-                </View>
-                <View style={styles.imageContainer}>
-                  <Image
-                    source={require('../../assests/InvetManGoldPlanImage.png')}
-                    style={styles.image}
-                  />
-                </View>
-              </View>
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity style={[styles.button, { backgroundColor: '#FDBE00' }]}>
-                  <Text style={styles.buttonText}>Invest Now</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-            <View style={styles.card}>
-              <View style={[styles.borderBar, { backgroundColor: '#9747FF', }]} />
-              <View style={styles.content}>
-                <View style={styles.textSection}>
-                  <View style={styles.titleRow}>
-                    <Icon name="schedule" size={14} color="#9747FF" />
-                    <Text style={styles.title}> Premium Plan</Text>
-                  </View>
-                  <Text style={styles.text}>ROI: 1.5% Daily</Text>
-                  <Text style={styles.text}>Min Amount: $500</Text>
-                  <Text style={styles.text}>Duration: 3 Days</Text>
-                  <Text style={styles.text}>Payout: Daily</Text>
-                </View>
-                <View style={styles.imageContainer}>
-                  <Image
-                    source={require('../../assests/InvetManPremiumPlanImage.png')}
-                    style={styles.image}
-                  />
-                </View>
-              </View>
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity style={[styles.button, { backgroundColor: '#9747FF' }]}>
-                  <Text style={styles.buttonText}>Invest Now</Text>
-                </TouchableOpacity>
-              </View>
-            </View> */}
 
                 {/* Ongoing Investments */}
                 <Text style={styles.investmentHeaderText}>Ongoing Investments</Text>
-                <View style={{
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <FlatList
-                    data={activeInvestments}
-                    renderItem={renderActiveInvestment}
-                    keyExtractor={(item) => item.id}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.horizontalScrollContainer}
-                    ListEmptyComponent={() => (
+                {
+                  activePlanLoading ? (
+                    <ActivityIndicator size={'large'} color={'#000'} style={styles.centeredLoader} />
+                  ) : (
+                    <View style={{
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                      ref={sectionRef}
+                    >
+                      <FlatList
+                        data={activeInvestments}
+                        renderItem={renderActiveInvestment}
+                        keyExtractor={(_,index) => index}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.horizontalScrollContainer}
+                        ListEmptyComponent={() => (
 
-                      <Text style={{ textAlign: 'center', marginVertical: 20, fontSize: 15 }}>No ongoing investments found</Text>
+                          <Text style={{ textAlign: 'center', marginVertical: 20, fontSize: 15 }}>No ongoing investments found</Text>
+                        )}
 
-                    )}
-
-                  />
-                </View>
-
-                {/* <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.horizontalScrollContainer}
-            >
-              <View style={[styles.ongoingInvestmentCard, { backgroundColor: '#0077FFD9' }]}>
-                <View style={styles.headerRow}>
-                  <Icon name="schedule" size={14} color="#fff" />
-                  <Text style={styles.planTitle}> Basic Plan</Text>
-                </View>
-
-                <Text style={styles.label}>Progress</Text>
-
-                <Slider
-                  style={styles.slider}
-                  minimumValue={0}
-                  maximumValue={1}
-                  value={0.4}
-                  minimumTrackTintColor="#fff"
-                  maximumTrackTintColor="#444"
-                  thumbTintColor="#fff"
-
-                />
-
-                <Text style={styles.detail}>Invested: $3000</Text>
-                <Text style={styles.detail}>Earnings: $225</Text>
-                <Text style={styles.detail}>Next Payout: May 10, 2025</Text>
-                <Text style={styles.detail}>End Date: Jun 25, 2025</Text>
-              </View>
-              <View style={[styles.ongoingInvestmentCard, { backgroundColor: '#FDBE00D9' }]}>
-                <View style={styles.headerRow}>
-                  <Icon name="schedule" size={14} color="#fff" />
-                  <Text style={styles.planTitle}> Gold Plan</Text>
-                </View>
-
-                <Text style={styles.label}>Progress</Text>
-
-                <Slider
-                  style={styles.slider}
-                  minimumValue={0}
-                  maximumValue={1}
-                  value={0.6}
-                  minimumTrackTintColor="#fff"
-                  maximumTrackTintColor="#444"
-                  thumbTintColor="#fff"
-                />
-
-                <Text style={styles.detail}>Invested: $3000</Text>
-                <Text style={styles.detail}>Earnings: $225</Text>
-                <Text style={styles.detail}>Next Payout: May 10, 2025</Text>
-                <Text style={styles.detail}>End Date: Jun 25, 2025</Text>
-              </View>
-              <View style={[styles.ongoingInvestmentCard, { backgroundColor: '#0077FFD9' }]}>
-                <View style={styles.headerRow}>
-                  <Icon name="schedule" size={14} color="#fff" />
-                  <Text style={styles.planTitle}> Basic Plan</Text>
-                </View>
-
-                <Text style={styles.label}>Progress</Text>
-
-                <Slider
-                  style={styles.slider}
-                  minimumValue={0}
-                  maximumValue={1}
-                  value={0.4}
-                  minimumTrackTintColor="#fff"
-                  maximumTrackTintColor="#444"
-                  thumbTintColor="#fff"
-
-                />
-
-                <Text style={styles.detail}>Invested: $3000</Text>
-                <Text style={styles.detail}>Earnings: $225</Text>
-                <Text style={styles.detail}>Next Payout: May 10, 2025</Text>
-                <Text style={styles.detail}>End Date: Jun 25, 2025</Text>
-              </View>
-              <View style={[styles.ongoingInvestmentCard, { backgroundColor: '#FDBE00D9' }]}>
-                <View style={styles.headerRow}>
-                  <Icon name="schedule" size={14} color="#fff" />
-                  <Text style={styles.planTitle}> Gold Plan</Text>
-                </View>
-
-                <Text style={styles.label}>Progress</Text>
-
-                <Slider
-                  style={styles.slider}
-                  minimumValue={0}
-                  maximumValue={1}
-                  value={0.4}
-                  minimumTrackTintColor="#fff"
-                  maximumTrackTintColor="#444"
-                  thumbTintColor="#fff"
-                />
-
-                <Text style={styles.detail}>Invested: $3000</Text>
-                <Text style={styles.detail}>Earnings: $225</Text>
-                <Text style={styles.detail}>Next Payout: May 10, 2025</Text>
-                <Text style={styles.detail}>End Date: Jun 25, 2025</Text>
-              </View>
-            </ScrollView> */}
+                      />
+                    </View>
+                  )
+                }
 
                 {/* Past Investments */}
 
                 <Text style={styles.investmentHeaderText}>Past Investment</Text>
-                <View style={styles.InvestmentTablecontainer}>
-                  <View style={styles.InvestmentTableheaderRow}>
-                    <Text style={styles.InvestmentTableheaderText}>Plan Type</Text>
-                    <Text style={styles.InvestmentTableheaderText}>Amount</Text>
-                    <Text style={styles.InvestmentTableheaderText}>Ended</Text>
-                    <Text style={styles.InvestmentTableheaderText}>Status</Text>
+                {
+                  pastPlanLoading ? (
+                    <ActivityIndicator size={'large'} color={'#000'} style={styles.centeredLoader} />
+                  ) : (
+                    <View style={styles.InvestmentTablecontainer}>
+                      <View style={styles.InvestmentTableheaderRow}>
+                        <Text style={styles.InvestmentTableheaderText}>Plan Type</Text>
+                        <Text style={styles.InvestmentTableheaderText}>Amount</Text>
+                        <Text style={styles.InvestmentTableheaderText}>Ended</Text>
+                        <Text style={styles.InvestmentTableheaderText}>Status</Text>
 
-                  </View>
-                  <FlatList
-                    data={investmentHistory}
-                    // horizontal
-                    renderItem={renderInvestmentHistory}
-                    keyExtractor={(item) => item._id}
-                    scrollEnabled={false}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingBottom: 20 }}
-                    ListEmptyComponent={() => (
-                      <Text style={{ textAlign: 'center', marginTop: 20, fontSize: 15 }}>No past investments</Text>
-                    )}
-
-                  />
-                </View>
-                {/* <Text style={styles.investmentHeaderText}>Past  Investment</Text> */}
-                {/* <View style={styles.InvestmentTablecontainer}> */}
-                {/* <View style={styles.InvestmentTableheaderRow}>
-                <Text style={styles.InvestmentTableheaderText}>Plan Type</Text>
-                <Text style={styles.InvestmentTableheaderText}>Amount</Text>
-                <Text style={styles.InvestmentTableheaderText}>Ended</Text>
-                <Text style={styles.InvestmentTableheaderText}>Status</Text>
-              </View> */}
-
-                {/* Row 1 */}
-                {/* <View style={styles.dataRow}>
-                <Text style={[styles.cellText, { color: '#2E7D32' }]}>Basic Plan</Text>
-                <Text style={[styles.cellText, { color: '#2E7D32' }]}>$1000</Text>
-                <Text style={[styles.cellText, { color: '#2E7D32' }]}>Mar 19,2025</Text>
-                <Text style={[styles.cellText, { color: '#2E7D32' }]}>Completed</Text>
-              </View> */}
-
-
-                {/* Row 2 */}
-                {/* <View style={styles.dataRow}>
-                <Text style={[styles.cellText, { color: '#FDBE00' }]}>Gold Plan</Text>
-                <Text style={[styles.cellText, { color: '#FDBE00' }]}>$2500</Text>
-                <Text style={[styles.cellText, { color: '#FDBE00' }]}>Mar 19,2025</Text>
-                <Text style={[styles.cellText, { color: '#2E7D32' }]}>Completed</Text>
-              </View> */}
-
-                {/* Row 3 */}
-                {/* <View style={styles.dataRow}>
-                <Text style={[styles.cellText, { color: '#2E7D32' }]}>Basic Plan</Text>
-                <Text style={[styles.cellText, { color: '#2E7D32' }]}>$1000</Text>
-                <Text style={[styles.cellText, { color: '#2E7D32' }]}>Mar 19,2025</Text>
-                <Text style={[styles.cellText, { color: '#2E7D32' }]}>Completed</Text>
-              </View> */}
-
-                {/* Row 4 */}
-                {/* <View style={styles.dataRow}>
-                <Text style={[styles.cellText, { color: '#9747FF' }]}>Premium Plan</Text>
-                <Text style={[styles.cellText, { color: '#9747FF' }]}>$4000</Text>
-                <Text style={[styles.cellText, { color: '#9747FF' }]}>Mar 19,2025</Text>
-                <Text style={[styles.cellText, { color: '#2E7D32' }]}>Completed</Text>
-              </View> */}
-
-                {/* </View> */}
+                      </View>
+                      <FlatList
+                        data={investmentHistory}
+                        // horizontal
+                        renderItem={renderInvestmentHistory}
+                        keyExtractor={(_,index) => index}
+                        scrollEnabled={false}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={{ paddingBottom: 20 }}
+                        ListEmptyComponent={() => (
+                          <Text style={{ textAlign: 'center', marginTop: 20, fontSize: 15 }}>No past investments</Text>
+                        )}
+                      />
+                    </View>
+                  )
+                }
               </View>
+
             </ScrollView>
 
           </SafeAreaView>
@@ -514,6 +338,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     height: '100%',
     left: 0,
+   
   },
   content: {
     flexDirection: 'row',
@@ -557,7 +382,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 14,
-    textAlign:' center',
+    textAlign: ' center',
   },
   imageContainer: {
     marginRight: 20
@@ -642,4 +467,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
   },
+  centeredLoader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
 })

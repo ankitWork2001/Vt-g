@@ -2,7 +2,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 
-
 // Get Reward Wallet
 export const getRewardWallet = createAsyncThunk(
   "reward/getWallet",
@@ -59,7 +58,7 @@ const rewardSlice = createSlice({
   name: "reward",
   initialState: {
     loading: false,
-    wallet: null,
+    rewardWallet: null,
     history: [],
     summary: null,
     bonusHistory: [],
@@ -69,16 +68,13 @@ const rewardSlice = createSlice({
   extraReducers: (builder) => {
     builder
 
-      // Reward Wallet
+      //Get Reward Wallet
       .addCase(getRewardWallet.pending, (state) => {
         state.loading = true;
       })
       .addCase(getRewardWallet.fulfilled, (state, action) => {
         state.loading = false;
-        state.wallet = {
-          rewardBalance: action.payload.rewardBalance,
-          rewardhistory: action.payload.rewardhistory,
-        };
+        state.rewardWallet = action.payload
       })
       .addCase(getRewardWallet.rejected, (state, action) => {
         state.loading = false;

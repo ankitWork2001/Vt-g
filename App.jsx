@@ -13,7 +13,7 @@ const App = () => {
     dispatch(loadToken());
   }, []);
   return (
-    <MainStackNavigator />
+    // <MainStackNavigator />
   
   )
 }

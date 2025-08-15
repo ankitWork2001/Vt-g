@@ -12,9 +12,9 @@ const App = () => {
   useEffect(() => {
     dispatch(loadToken());
   }, []);
- 
   return (
     <MainStackNavigator />
+  
   )
 }
 
